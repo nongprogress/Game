@@ -119,15 +119,14 @@ function normalizeFrames(map){
 async function loadAtlas(png='assets/atlas.png', json='assets/atlas.json'){
   try{
     const map = await fetch(json).then(r=>r.json());
-    Atlas.frames = normalizeFrames(map);
-    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src=png; });
+    Atlas.frames = (map.frames && !Array.isArray(map.frames)) ? map.frames
+                 : Array.isArray(map.frames)
+                 ? Object.fromEntries(map.frames.map(f=>[(f.filename||'').replace(/\.(png|jpe?g)$/i,''), f.frame||f]))
+                 : map;
+    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = png; });
     Atlas.ready = true;
+    autoAliasFramesV2();                // ← สำคัญ
     console.log('[Atlas] ready', Object.keys(Atlas.frames).length);
-    // Badge เล็ก ๆ แจ้งสถานะ
-    const el=document.createElement('div');
-    el.style.cssText='position:fixed;top:10px;left:10px;z-index:9999;background:#0b1220cc;color:#e2e8f0;border:1px solid #243041;border-radius:8px;padding:6px 10px;font:12px system-ui';
-    el.textContent = `Atlas ✓ frames:${Object.keys(Atlas.frames).length}`;
-    document.body.appendChild(el); setTimeout(()=>el.remove(),2500);
   }catch(e){ console.warn('[Atlas] load failed', e); Atlas.ready=false; }
 }
 function drawFrame(ctx, name, x, y, w, h, rot=0){
@@ -137,7 +136,75 @@ function drawFrame(ctx, name, x, y, w, h, rot=0){
   ctx.restore(); return true;
 }
 window.Atlas=Atlas; window.drawFrame=drawFrame; // ให้เช็คใน Console ได้
+function autoAliasFramesV2(){
+  const F = Atlas.frames; if(!F) return;
+  const keys = Object.keys(F);
+  const groups = {};
+  for(const k of keys){
+    const m = k.match(/^([a-z0-9]+?)(?:[_\-](\d+))?$/i);
+    if(!m) continue;
+    const stem = m[1].toLowerCase();
+    const idx  = m[2] ? parseInt(m[2],10) : Number.POSITIVE_INFINITY;
+    const fr = F[k]; const area = (fr.w||0)*(fr.h||0);
+    (groups[stem] ||= []).push({ key:k, idx, area });
+  }
+  for(const arr of Object.values(groups)){
+    arr.sort((a,b)=> (a.idx - b.idx) || (b.area - a.area));
+  }
 
+  const pickStem = (prio, used=new Set())=>{
+    for(const s of prio) if(groups[s] && !used.has(s)) return s;
+    const bad = new Set(['tower','trees','tree','rocks','rock','landscape','bg','background','hud','ui']);
+    let best=null, score=-1;
+    for(const [s,arr] of Object.entries(groups)){
+      if(used.has(s) || bad.has(s)) continue;
+      const sc = arr.length*100000 + (arr[0]?.area||0);
+      if(sc>score){ score=sc; best=s; }
+    }
+    if(best) return best;
+    if(groups['crystals'] && !used.has('crystals')) return 'crystals';
+    for(const [s,arr] of Object.entries(groups)){
+      if(used.has(s)) continue;
+      const sc = arr.length*100000 + (arr[0]?.area||0);
+      if(sc>score){ score=sc; best=s; }
+    }
+    return best;
+  };
+
+  const used = new Set();
+  const enemyPlan = [
+    { type:'runner', prio:['crystals','crystal','slime','goblin','orc'] },
+    { type:'brute',  prio:['rocks','rock','golem','brute'] },
+    { type:'flyer',  prio:['bat','fly','bird','harpy','flyer'] },
+    { type:'boss',   prio:['boss','dragon','demon','crystals'] },
+  ];
+
+  for(const e of enemyPlan){
+    const s = pickStem(e.prio, used); if(!s) continue;
+    used.add(s);
+    const arr = groups[s];
+    for(let i=0;i<6;i++){
+      const src = arr[i % arr.length].key;
+      F[`enemy_${e.type}_${i}`] = F[src];
+    }
+    console.log('[alias] enemy', e.type, '←', s, `(${arr.length} frames)`);
+  }
+
+  const tarr = (groups['tower']||[]).slice().sort((a,b)=> (b.area - a.area) || (a.idx - b.idx));
+  const types = ['gun','frost','rocket','artillery'];
+  for(let i=0;i<types.length;i++){
+    const base   = tarr.shift()?.key;
+    const turret = tarr.shift()?.key;
+    if(base)   F[`tower_${types[i]}_base`]   = F[base];
+    if(turret) F[`tower_${types[i]}_turret`] = F[turret];
+    console.log('[alias] tower', types[i], '←', base, '/', turret);
+  }
+
+  const rocks = groups['rocks'] || groups['rock'];
+  if(rocks?.length) F['mine'] = F[rocks[0].key];
+
+  if(!F['bullet']) console.log('[alias] bullet: none (use code fallback)');
+}
 // ===== GAME CONFIG =====
 const CONFIG = {
   GRID:{ COLS:24, ROWS:14 },
@@ -506,3 +573,4 @@ setupWorldSelection();
 </script>
 </body>
 </html>
+
