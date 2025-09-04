@@ -136,6 +136,79 @@ function drawFrame(ctx, name, x, y, w, h, rot=0){
   ctx.restore(); return true;
 }
 window.Atlas=Atlas; window.drawFrame=drawFrame; // ให้เช็คใน Console ได้
+// === Patterns & Ground ===
+function getPattern(ctx, frameName, scale=1){
+  getPattern.cache ??= {};
+  const key = frameName+'@'+scale;
+  if(getPattern.cache[key]) return getPattern.cache[key];
+  const f = Atlas.frames?.[frameName]; if(!f) return null;
+  const off = document.createElement('canvas');
+  off.width = Math.max(2, Math.floor(f.w*scale));
+  off.height= Math.max(2, Math.floor(f.h*scale));
+  const oc = off.getContext('2d');
+  oc.imageSmoothingEnabled = false;
+  oc.drawImage(Atlas.img, f.x,f.y,f.w,f.h, 0,0, off.width, off.height);
+  const pat = ctx.createPattern(off, 'repeat');
+  return (getPattern.cache[key] = pat);
+}
+
+// กำหนดชื่อเฟรมจาก atlas ที่จะใช้เป็นพื้น/ทาง (ปรับชื่อให้ตรงกับ atlas คุณได้)
+const THEME = {
+  grassFrame: 'landscape_05',  // พื้นหญ้า
+  pathFrame : 'landscape_22',  // ทางดิน/ทราย
+};
+
+function drawGround(ctx){
+  // ถ้าไม่มีเฟรม ใช้สี fallback
+  const pat = getPattern(ctx, THEME.grassFrame, 0.5);
+  if(pat){ ctx.fillStyle = pat; ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height); }
+  else{
+    const root = getComputedStyle(document.documentElement);
+    const biomeBg = root.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
+    ctx.fillStyle = biomeBg || '#134e4a';
+    ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height);
+  }
+}
+
+function drawPath(ctx){
+  // สร้างทางแบบ 2 ชั้น (ขอบเข้ม + ไส้ทางสว่าง)
+  const ts = TS();
+  const wOuter = ts.w * 1.20;   // ความกว้างขอบนอก
+  const wInner = ts.w * 0.90;   // ความกว้างไส้ทาง
+  const root = getComputedStyle(document.documentElement);
+  const pathFallback = root.getPropertyValue(`--path-${state.biome.toLowerCase()}`).trim() || '#a16207';
+
+  // ขอบทาง (เงา)
+  ctx.save();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
+  ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = wOuter;
+  ctx.beginPath(); for(const p of state.path) ctx.lineTo(p.x, p.y); ctx.stroke();
+  ctx.restore();
+
+  // ไส้ทางด้วย pattern (ถ้าไม่มี ใช้สี fallback)
+  ctx.save();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  const pat = getPattern(ctx, THEME.pathFrame, 0.6);
+  ctx.strokeStyle = pat || pathFallback;
+  ctx.lineWidth = wInner;
+  ctx.beginPath(); for(const p of state.path) ctx.lineTo(p.x, p.y); ctx.stroke();
+  ctx.restore();
+
+  // จุด gravel เล็กๆ เพิ่มความมีชีวิต
+  ctx.save();
+  ctx.globalAlpha = .25;
+  for (let i=0; i<80; i++){
+    const idx = Math.floor(Math.random()*(state.path.length-1));
+    const a = state.path[idx], b = state.path[idx+1];
+    if(!b) continue;
+    const t = Math.random(); const x = a.x + (b.x-a.x)*t, y = a.y + (b.y-a.y)*t;
+    const dx = (Math.random()-.5)*wInner*0.9, dy = (Math.random()-.5)*wInner*0.9;
+    ctx.fillStyle = '#3f2d20'; ctx.beginPath(); ctx.arc(x+dx, y+dy, Math.random()*2+0.5, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
 function autoAliasFramesV2(){
   const F = Atlas.frames; if(!F) return;
   const keys = Object.keys(F);
@@ -215,11 +288,47 @@ const CONFIG = {
     4:{ hp:350, cost:{gold:3000,cores:5}, unlocks:['METEOR_STRIKE'] }
   },
   TOWER_TYPES:{
-    GUN:{ name:'ป้อมปืนกล', tier:1, cost:{gold:30,ore:0}, stats:{ dmg:35, range:2.3, rate:5.9, projectileSpeed:450 } },
-    FROST:{ name:'ป้อมน้ำแข็ง', tier:2, cost:{gold:80,ore:10}, stats:{ dmg:45, range:2.1, rate:1.2, slow:0.35, projectileSpeed:350 } },
-    ROCKET:{ name:'ป้อมจรวด', tier:2, cost:{gold:120,ore:30}, stats:{ dmg:40, range:2.8, rate:0.4, splash:1.0, projectileSpeed:300 } },
-    ARTILLERY:{ name:'ป้อมปืนใหญ่', tier:3, cost:{gold:200,ore:50}, stats:{ dmg:80, range:4.5, rate:0.25, splash:1.5, minRange:1.8, projectileSpeed:200 } }
+  GUN:{
+    name:'ป้อมปืนกล', tier:1,
+    cost:{ gold:30, ore:0 },
+    stats:{ dmg:35, range:2.3, rate:5.9, projectileSpeed:450 },
+    upgrades:{
+      dmg:   { label:'+DMG',   cost:{ ore:10 }, mul:1.20 },
+      range: { label:'+RANGE', cost:{ ore:15 }, mul:1.10 },
+      rate:  { label:'+RATE',  cost:{ ore:12 }, mul:1.12 }
+    }
   },
+  FROST:{
+    name:'ป้อมน้ำแข็ง', tier:2,
+    cost:{ gold:80, ore:10 },
+    stats:{ dmg:45, range:2.1, rate:1.2, slow:0.35, projectileSpeed:350 },
+    upgrades:{
+      dmg:   { label:'+DMG',   cost:{ ore:15 }, mul:1.30 },
+      range: { label:'+RANGE', cost:{ ore:15 }, mul:1.10 },
+      slow:  { label:'+SLOW',  cost:{ ore:20 }, mul:1.15 }
+    }
+  },
+  ROCKET:{
+    name:'ป้อมจรวด', tier:2,
+    cost:{ gold:120, ore:30 },
+    stats:{ dmg:40, range:2.8, rate:0.4, splash:1.0, projectileSpeed:300 },
+    upgrades:{
+      dmg:    { label:'+DMG',    cost:{ ore:40 }, mul:1.25 },
+      range:  { label:'+RANGE',  cost:{ ore:30 }, mul:1.08 },
+      splash: { label:'+SPLASH', cost:{ ore:50 }, mul:1.20 }
+    }
+  },
+  ARTILLERY:{
+    name:'ป้อมปืนใหญ่', tier:3,
+    cost:{ gold:200, ore:50 },
+    stats:{ dmg:80, range:4.5, rate:0.25, splash:1.5, minRange:1.8, projectileSpeed:200 },
+    upgrades:{
+      dmg:    { label:'+DMG',    cost:{ ore:80 },  mul:1.20 },
+      range:  { label:'+RANGE',  cost:{ ore:60 },  mul:1.10 },
+      splash: { label:'+SPLASH', cost:{ ore:100 }, mul:1.15 }
+    }
+  }
+},
   BUILDING_TYPES:{
     MINE:{ name:'เหมืองแร่', tier:1, cost:{gold:40,ore:0}, stats:{ rate:5, yield:2 } },
     BARRACKS:{ name:'ค่ายทหาร', tier:3, cost:{gold:150,ore:20}, limit:1 }
@@ -299,6 +408,7 @@ class Tower extends Entity{
     }
     // Turret (rotated)
     ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle + Math.PI/2);
+    ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=8; ctx.shadowOffsetY=4;
     if(!drawFrame(ctx, turretName, 0, 0, size, size)){
       ctx.fillStyle = '#22d3ee'; ctx.fillRect(-4,-4,8,20);
     }
@@ -371,6 +481,7 @@ class Enemy{
     if(!ok) ok = drawFrame(ctx, base, this.x, this.y, size*2, size*2);
     if(!ok){
       ctx.save(); ctx.translate(this.x,this.y);
+      ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6; ctx.shadowOffsetY=3;
       if(this.key==='RUNNER'){ ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
       if(this.key==='BRUTE'){ ctx.fillStyle='#a855f7'; ctx.fillRect(-10,-10,20,20); }
       if(this.key==='FLYER'){ ctx.fillStyle='#eab308'; ctx.beginPath(); ctx.moveTo(0,-10);ctx.lineTo(10,10);ctx.lineTo(-10,10);ctx.closePath();ctx.fill(); }
@@ -451,15 +562,27 @@ function startWave(){
   const spawnInterval = setInterval(()=>{ if(spawnQueue.length>0){ state.enemies.push(new Enemy(spawnQueue.shift())); } else { clearInterval(spawnInterval); } }, 800/state.speed);
 }
 function handleCanvasClick(){
-  const {c,r}=worldToTile(state.mouse.x,state.mouse.y);
+  const {c,r} = worldToTile(state.mouse.x, state.mouse.y);
   if(c<0||r<0||c>=CONFIG.GRID.COLS||r>=CONFIG.GRID.ROWS) return;
-  if(state.buildMode) placeEntity(c,r);
-  else { const hit=[...state.towers,...state.buildings].find(e=>e.c===c && e.r===r); state.selectedEntity=hit||null; updateSelectedInfo(); }
+
+  if(state.buildMode){
+    // กันก่อนกดสร้าง
+    if (isTooCloseToPath(c,r)) return toast('ใกล้ทางเดินเกินไป');
+    placeEntity(c,r);
+  } else {
+    const hit=[...state.towers,...state.buildings].find(e=>e.c===c && e.r===r);
+    state.selectedEntity=hit||null;
+    updateSelectedInfo();
+  }
 }
 function placeEntity(c,r){
   if(state.pathGrid.has(`${c},${r}`)) return toast("ไม่สามารถสร้างบนทางเดินได้");
+  if(isTooCloseToPath(c,r))           return toast('ใกล้ทางเดินเกินไป');
   if([...state.towers,...state.buildings].some(e=>e.c===c && e.r===r)) return toast("มีสิ่งก่อสร้างอยู่แล้ว");
-  const key=state.buildMode, isTower=!!CONFIG.TOWER_TYPES[key], def=isTower?CONFIG.TOWER_TYPES[key]:CONFIG.BUILDING_TYPES[key];
+
+  const key=state.buildMode, isTower=!!CONFIG.TOWER_TYPES[key];
+  const def=isTower?CONFIG.TOWER_TYPES[key]:CONFIG.BUILDING_TYPES[key];
+
   if(state.gold>=def.cost.gold && state.ore>=(def.cost.ore||0)){
     state.gold-=def.cost.gold; state.ore-=(def.cost.ore||0);
     if(isTower) state.towers.push(new Tower(c,r,key)); else state.buildings.push(new Building(c,r,key));
@@ -473,24 +596,31 @@ function update(dt){ if(state.mode!=='play') return; state.towers.forEach(t=>t.u
   state.effects=state.effects.filter(e=>e.alive); state.effects.forEach(e=>e.update(dt)); updateHUD();
 }
 function draw(){
-  const root=getComputedStyle(document.documentElement);
-  const biomeBg=root.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
-  const pathColor=root.getPropertyValue(`--path-${state.biome.toLowerCase()}`).trim();
-  g.fillStyle=biomeBg; g.fillRect(0,0,game.width,game.height);
-  const ts=TS();
-  // path
-  g.fillStyle=pathColor; g.strokeStyle="#00000033"; g.lineWidth=2;
-  for(const p of state.path){ const {x,y}=p; g.beginPath(); g.arc(x,y,ts.w*0.6,0,Math.PI*2); g.fill(); g.stroke(); }
-  // decorations
-  g.fillStyle='#14532d'; state.decorations.forEach(d=>{ const {x,y}=tileCenter(d.c,d.r); g.beginPath(); g.arc(x,y,Math.random()*8+8,0,Math.PI*2); g.fill(); });
-  // entities
-  state.buildings.forEach(e=>e.draw(g)); state.towers.forEach(e=>e.draw(g)); state.enemies.forEach(e=>e.draw(g)); state.bullets.forEach(e=>e.draw(g)); state.effects.forEach(e=>e.draw(g));
-  // placement preview
-  if(state.buildMode){ const {c,r}=worldToTile(state.mouse.x,state.mouse.y); if(c>=0&&r>=0){ const {x,y}=tileCenter(c,r); const def=CONFIG.TOWER_TYPES[state.buildMode]||CONFIG.BUILDING_TYPES[state.buildMode]; const can=!state.pathGrid.has(`${c},${r}`)&&![...state.towers,...state.buildings].some(e=>e.c===c&&e.r===r);
-      g.globalAlpha=.5; g.fillStyle=can?'#22c55e':'#ef4444'; g.fillRect(x-ts.w/2,y-ts.h/2,ts.w,ts.h);
-      if(def.stats?.range){ g.beginPath(); g.strokeStyle='#fff'; g.arc(x,y,def.stats.range*ts.w,0,Math.PI*2); g.stroke(); }
-      g.globalAlpha=1; } }
+  drawGround(g);          // พื้นหญ้าแบบ texture
+  drawPath(g);            // ทางเดิน 2 ชั้น + เงา
+
+  const ts = TS();
+
+  // ตกแต่ง (เดิม)
+  g.fillStyle = 'rgba(20,83,45,.45)';
+  state.decorations.forEach(d=>{
+    const {x,y} = tileCenter(d.c,d.r);
+    g.beginPath();
+    g.arc(x,y, Math.random()*6 + 6, 0, Math.PI*2);
+    g.fill();
+  });
+
+  // Entities
+  state.buildings.forEach(e=>e.draw(g));
+  state.towers.forEach(e=>e.draw(g));
+  state.enemies.forEach(e=>e.draw(g));
+  state.bullets.forEach(e=>e.draw(g));
+  state.effects.forEach(e=>e.draw(g));
+
+  // Overlay ช่องวางป้อม (ดูข้อ 2)
+  drawBuildOverlay(g);
 }
+
 function updateHUD(){ const tier=CONFIG.CITADEL_TIERS[state.citadelTier];
   document.getElementById('citadelHP').textContent=state.citadelHP;
   document.getElementById('citadelMaxHP').textContent=tier.hp;
@@ -511,7 +641,64 @@ function updateBuildMenu(){
     buildMenu.appendChild(btn);
   }
 }
-function updateSelectedInfo(){ const box=document.getElementById('selectedInfo'); const e=state.selectedEntity; if(!e){ box.innerHTML=`<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`; return; } box.innerHTML=`<b>${e.def.name}</b> (Level ${e.level||1})`; }
+function updateSelectedInfo(){
+  const box = document.getElementById('selectedInfo');
+  const t = state.selectedEntity;
+  if(!t || t.type!=='tower'){ box.innerHTML = `<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`; return; }
+
+  const st = t.stats, up = t.def.upgrades || {};
+  const lines = [
+    `<b>${t.def.name}</b> — Lv.${t.level}`,
+    `DMG: ${Math.round(st.dmg)} | RNG: ${st.range.toFixed(2)} | RATE: ${st.rate?.toFixed(2) || '-'}` +
+    (st.slow? ` | SLOW: ${(st.slow*100).toFixed(0)}%` : '') +
+    (st.splash? ` | SPLASH: ${st.splash.toFixed(2)}` : '')
+  ];
+
+  let btns = '';
+  for(const [k,def] of Object.entries(up)){
+    const costText = Object.entries(def.cost).map(([r,v])=>`${v} ${r}`).join(', ');
+    btns += `<button class="btn" data-up="${k}" style="width:calc(50% - 4px)">${def.label} (${costText})</button>`;
+  }
+
+  box.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div>${lines.join('<br/>')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${btns || '<small>ไม่มีอัปเกรด</small>'}</div>
+    </div>
+  `;
+
+  box.querySelectorAll('button[data-up]').forEach(b=>{
+    b.onclick = () => {
+      const key = b.getAttribute('data-up');
+      attemptUpgradeTower(t, key);
+    };
+  });
+}
+
+function attemptUpgradeTower(tower, key){
+  const up = tower.def.upgrades?.[key]; if(!up) return;
+  // เช็คทรัพยากร
+  const can = Object.entries(up.cost).every(([k,v])=> state[k] >= v);
+  if(!can) return toast('ทรัพยากรไม่พอ');
+
+  // ตัดทรัพยากร
+  Object.entries(up.cost).forEach(([k,v])=> state[k]-=v);
+
+  // ผลอัปเกรด (คูณตาม mul)
+  if(key==='dmg')   tower.stats.dmg   *= up.mul;
+  if(key==='range') tower.stats.range *= up.mul;
+  if(key==='rate')  tower.stats.rate  *= up.mul;
+  if(key==='slow')  tower.stats.slow  *= up.mul;
+  if(key==='splash')tower.stats.splash*= up.mul;
+
+  tower.level = (tower.level||1) + 1;
+  // ปรับสมเหตุผลกับไบโอม: ป้อมในทะเลทรายยิงช้าลง → ให้ rate boost เพิ่มอีกนิดเวลามีอัปเกรด rate
+  if(key==='rate' && state.biome==='DESERT'){ tower.stats.rate *= 1.02; }
+
+  updateHUD(); updateSelectedInfo();
+  toast('อัปเกรดสำเร็จ');
+}
+
 function updateCitadelUI(){
   const container=document.getElementById('citadelTiers'); container.innerHTML='';
   for(let i=2;i<=4;i++){ const tier=CONFIG.CITADEL_TIERS[i]; const div=document.createElement('div'); div.className='tier';
@@ -565,6 +752,54 @@ function tileCenter(c,r){ const t=TS(); return { x:(c+0.5)*t.w, y:(r+0.5)*t.h };
 function worldToTile(px,py){ const t=TS(); return { c:Math.floor(px/t.w), r:Math.floor(py/t.h) }; }
 function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
 function toast(msg){ const el=document.createElement('div'); el.style.position='fixed'; el.style.bottom='20px'; el.style.left='50%'; el.style.transform='translateX(-50%)'; el.style.background='var(--pri)'; el.style.color='#0b1220'; el.style.padding='10px 20px'; el.style.borderRadius='8px'; el.style.zIndex='200'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2500); }
+function nearestPathDistPx(x,y){
+  let m = Infinity;
+  for(const p of state.path){ const d = dist(x,y,p.x,p.y); if(d<m) m=d; }
+  return m;
+}
+function isTooCloseToPath(c,r){
+  const {x,y} = tileCenter(c,r);
+  // ห้ามใกล้กึ่งกลางทาง < 0.65 tile กำลังดี (กันไม่ให้บังภาพ/ชนกัน)
+  return nearestPathDistPx(x,y) < TS().w * 0.65;
+}
+function drawBuildOverlay(ctx){
+  if(!state.buildMode) return;
+  const ts = TS();
+  for(let r=0;r<CONFIG.GRID.ROWS;r++){
+    for(let c=0;c<CONFIG.GRID.COLS;c++){
+      const {x,y} = tileCenter(c,r);
+      const onPath = state.pathGrid.has(`${c},${r}`);
+      const occupied = [...state.towers, ...state.buildings].some(e=>e.c===c&&e.r===r);
+      const tooClose = isTooCloseToPath(c,r);
+
+      let alpha = .14;
+      let col   = '#22c55e'; // เขียว = วางได้
+      if (onPath || occupied || tooClose){ col = '#ef4444'; alpha = .18; }
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = col;
+      const w = ts.w - 4, h = ts.h - 4;
+      roundRect(ctx, x-w/2, y-h/2, w, h, 8); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ไฮไลต์ช่องที่เมาส์ชี้
+  const t = worldToTile(state.mouse.x,state.mouse.y);
+  if(t.c>=0 && t.r>=0){
+    const {x,y} = tileCenter(t.c,t.r);
+    ctx.save(); ctx.globalAlpha=.35; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+    const w = ts.w - 2, h = ts.h - 2;
+    roundRect(ctx, x-w/2, y-h/2, w, h, 10); ctx.stroke(); ctx.restore();
+  }
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
 
 // Boot
 setupWorldSelection();
@@ -573,4 +808,5 @@ setupWorldSelection();
 </script>
 </body>
 </html>
+
 
