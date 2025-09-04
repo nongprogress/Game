@@ -9,12 +9,10 @@
     --bg:#0b1220; --card:#0f172a; --line:#243041; --ink:#e2e8f0; --mut:#a8b3c7;
     --pri:#22d3ee; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --yel:#facc15;
     --safe:#2e7d32; --ore:#8d6e63; --bal:#2962ff; --lava:#b91c1c; --ice:#38bdf8; --sand:#ca8a04;
-    
-    /* Biome Colors */
-    --bg-grassland: #166534; --path-grassland: #a16207;
-    --bg-desert: #b45309; --path-desert: #fde68a;
-    --bg-frostlands: #075985; --path-frostlands: #e0f2fe;
-    --bg-volcanic: #4f46e5; --path-volcanic: #1e293b;
+    --bg-grassland:#166534; --path-grassland:#a16207;
+    --bg-desert:#b45309; --path-desert:#fde68a;
+    --bg-frostlands:#075985; --path-frostlands:#e0f2fe;
+    --bg-volcanic:#4f46e5; --path-volcanic:#1e293b;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;margin:0}
@@ -22,815 +20,489 @@
   .wrap{max-width:1400px;margin:0 auto;padding:12px}
   header{position:sticky;top:0;background:#0b1220cc;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:10}
   .hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 0}
-  .pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px; font-size: 12px;}
+  .pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
   .btn{cursor:pointer;border:1px solid var(--line);background:linear-gradient(180deg,#1b2636,#131b28);color:var(--ink);padding:8px 12px;border-radius:10px}
   .btn:hover{border-color:#3b4a63}
-  .btn:disabled{background:#111a2a; color:var(--mut); border-color:var(--line); cursor:not-allowed;}
+  .btn:disabled{background:#111a2a;color:var(--mut);border-color:var(--line);cursor:not-allowed}
   .gridWrap{display:grid;grid-template-columns:1fr;gap:12px}
-  canvas{display:block;width:100%;height:auto;border:1px solid var(--line); border-radius: 12px; cursor: crosshair;}
+  canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;cursor:crosshair}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
   .row{display:flex;flex-wrap:wrap;gap:8px}
   .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   @media (min-width:1000px){.gridWrap{grid-template-columns:3fr 1fr}}
-
-  /* Modal Styles */
-  .modal{position:fixed;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100; opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s;}
-  .modal.visible{opacity:1; visibility: visible;}
+  .modal{position:fixed;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+  .modal.visible{opacity:1;visibility:visible}
   .modal-content{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
   .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  .tier{border:1px solid var(--line); padding:10px; border-radius:10px; margin-bottom:10px; background: #0b1220;}
-  .tier h4{margin:0 0 8px;}
-  .tier p{font-size:12px; color:var(--mut); margin: 0 0 8px;}
-  #loadingOverlay{color:white; font-size:1.5em; text-align: center;}
+  .tier{border:1px solid var(--line);padding:10px;border-radius:10px;margin-bottom:10px;background:#0b1220}
+  .tier h4{margin:0 0 8px}
+  .tier p{font-size:12px;color:var(--mut);margin:0 0 8px}
+  #loadingOverlay{color:white;font-size:1.5em;text-align:center}
 </style>
 </head>
 <body>
-  <header class="wrap">
-    <div class="hud">
-      <div class="row">
-        <div class="pill">🏛️ ฐานทัพ: <b id="citadelHP">100</b>/<b id="citadelMaxHP">100</b> (Tier <b id="citadelTier">1</b>)</div>
-        <div class="pill">💰 <b id="gold">0</b></div>
-        <div class="pill">⛏️ <b id="ore">0</b></div>
-        <div class="pill">⚙️ <b id="components">0</b></div>
-        <div class="pill">🔩 <b id="gears">0</b></div>
-        <div class="pill">💎 <b id="cores">0</b></div>
-        <div class="pill">🌊 Wave <b id="wave">0</b></div>
-      </div>
-      <div class="row">
-        <button class="btn" id="btnStart">▶ Start Wave</button>
-        <button class="btn" id="btnCitadel">🏛️ อัปเกรดฐานทัพ</button>
-        <button class="btn" id="btnSpeed">⏩ Speed x1</button>
-      </div>
+<header class="wrap">
+  <div class="hud">
+    <div class="row">
+      <div class="pill">🏛️ ฐานทัพ: <b id="citadelHP">100</b>/<b id="citadelMaxHP">100</b> (Tier <b id="citadelTier">1</b>)</div>
+      <div class="pill">💰 <b id="gold">0</b></div>
+      <div class="pill">⛏️ <b id="ore">0</b></div>
+      <div class="pill">⚙️ <b id="components">0</b></div>
+      <div class="pill">🔩 <b id="gears">0</b></div>
+      <div class="pill">💎 <b id="cores">0</b></div>
+      <div class="pill">🌊 Wave <b id="wave">0</b></div>
     </div>
-  </header>
-
-  <main class="wrap gridWrap">
-    <section>
-      <canvas id="game" width="1280" height="720"></canvas>
-    </section>
-    <aside class="panel">
-      <h3 style="margin:0 0 8px">สิ่งก่อสร้าง (Tier <span id="buildTier">1</span>)</h3>
-      <div class="list" id="buildMenu">
-        <!-- Build buttons are now generated by JS -->
-      </div>
-      <h3 style="margin:12px 0 8px">สิ่งที่เลือก</h3>
-      <div id="selectedInfo" class="panel" style="min-height:120px; background:#0b1220; padding:8px;">
-        <small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>
-      </div>
-    </aside>
-  </main>
-
-  <!-- Citadel Upgrade Modal -->
-  <div id="citadelModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>อัปเกรดฐานทัพ</h2>
-        <button id="closeCitadelModal" class="btn">×</button>
-      </div>
-      <div id="citadelTiers">
-        <!-- Tiers are generated by JS -->
-      </div>
+    <div class="row">
+      <button class="btn" id="btnStart">▶ Start Wave</button>
+      <button class="btn" id="btnCitadel">🏛️ อัปเกรดฐานทัพ</button>
+      <button class="btn" id="btnSpeed">⏩ Speed x1</button>
     </div>
   </div>
-  
-  <div id="worldOverlay" class="modal visible">
-    <div id="loadingOverlay" style="display:none;">
-        <p>กำลังโหลดทรัพยากร...</p>
+</header>
+
+<main class="wrap gridWrap">
+  <section><canvas id="game" width="1280" height="720"></canvas></section>
+  <aside class="panel">
+    <h3 style="margin:0 0 8px">สิ่งก่อสร้าง (Tier <span id="buildTier">1</span>)</h3>
+    <div class="list" id="buildMenu"></div>
+    <h3 style="margin:12px 0 8px">สิ่งที่เลือก</h3>
+    <div id="selectedInfo" class="panel" style="min-height:120px;background:#0b1220;padding:8px">
+      <small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>
     </div>
-    <div id="selectionContent" class="modal-content" style="max-width: 960px;">
-        <h3>เลือกพื้นที่ตั้งฐานบนแผนที่โลก</h3>
-        <div class="legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <span><i style="display:inline-block;width:10px;height:10px;background:var(--safe);border-radius:2px"></i> ทุ่งหญ้า</span>
-          <span><i style="display:inline-block;width:10px;height:10px;background:var(--sand);border-radius:2px"></i> ทะเลทราย</span>
-          <span><i style="display:inline-block;width:10px;height:10px;background:var(--ice);border-radius:2px"></i> แดนน้ำแข็ง</span>
-          <span><i style="display:inline-block;width:10px;height:10px;background:var(--lava);border-radius:2px"></i> เขตภูเขาไฟ</span>
-        </div>
-        <canvas id="world" width="960" height="540"></canvas>
-        <div id="zonePreview" style="margin-top:10px; min-height: 40px;">เลือกพื้นที่...</div>
-        <button class="btn" id="btnConfirm" disabled style="width:100%; margin-top:10px;">✅ ยืนยันตั้งฐานที่นี่</button>
+  </aside>
+</main>
+
+<!-- Citadel Upgrade Modal -->
+<div id="citadelModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>อัปเกรดฐานทัพ</h2>
+      <button id="closeCitadelModal" class="btn">×</button>
     </div>
+    <div id="citadelTiers"></div>
   </div>
+</div>
+
+<div id="worldOverlay" class="modal visible">
+  <div id="loadingOverlay" style="display:none;"><p>กำลังโหลดทรัพยากร...</p></div>
+  <div id="selectionContent" class="modal-content" style="max-width:960px">
+    <h3>เลือกพื้นที่ตั้งฐานบนแผนที่โลก</h3>
+    <div class="legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <span><i style="display:inline-block;width:10px;height:10px;background:var(--safe);border-radius:2px"></i> ทุ่งหญ้า</span>
+      <span><i style="display:inline-block;width:10px;height:10px;background:var(--sand);border-radius:2px"></i> ทะเลทราย</span>
+      <span><i style="display:inline-block;width:10px;height:10px;background:var(--ice);border-radius:2px"></i> แดนน้ำแข็ง</span>
+      <span><i style="display:inline-block;width:10px;height:10px;background:var(--lava);border-radius:2px"></i> เขตภูเขาไฟ</span>
+    </div>
+    <canvas id="world" width="960" height="540"></canvas>
+    <div id="zonePreview" style="margin-top:10px;min-height:40px;">เลือกพื้นที่...</div>
+    <button class="btn" id="btnConfirm" disabled style="width:100%;margin-top:10px">✅ ยืนยันตั้งฐานที่นี่</button>
+  </div>
+</div>
 
 <script>
 (async function(){
-  // ====== Atlas Loader (paste into your game) ======
-  const Atlas = { img:new Image(), frames:{}, ready:false };
-  async function loadAtlas(png='assets/atlas.png', json='assets/atlas.json'){
-    try{ const map = await fetch(json).then(r=>r.json()); Atlas.frames = map.frames || map; await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = png; }); Atlas.ready=true; }
-    catch(e){ console.warn('Atlas load failed, fallback to placeholders.', e); Atlas.ready=false; }
-  }
-  function drawFrame(ctx, name, x, y, w, h, rot=0){ const f = Atlas.frames?.[name]; if(!Atlas.ready || !f) return false; ctx.save(); ctx.translate(x,y); if(rot) ctx.rotate(rot); ctx.drawImage(Atlas.img, f.x, f.y, f.w, f.h, -w/2, -h/2, w, h); ctx.restore(); return true; }
-  // ======================================================
 
-  // =========================
-  // GAME CONFIGURATION (PROFESSIONAL REFACTOR)
-  // =========================
-  const CONFIG = {
-    GRID: { COLS: 24, ROWS: 14 },
-    CITADEL_TIERS: {
-      1: { hp: 100, unlocks: ['GUN', 'MINE'] },
-      2: { hp: 150, cost: { gold: 100, components: 50 }, unlocks: ['FROST', 'ROCKET'] },
-      3: { hp: 220, cost: { gold: 1200, gears: 25 }, unlocks: ['ARTILLERY', 'BARRACKS'] },
-      4: { hp: 350, cost: { gold: 3000, cores: 5 }, unlocks: ['METEOR_STRIKE'] }
-    },
-    TOWER_TYPES: {
-      GUN: { name: 'ป้อมปืนกล', tier: 1, cost: { gold: 30, ore: 0 }, stats: { dmg: 35, range: 2.3, rate: 5.9, projectileSpeed: 450 }, upgrades: { dmg: { cost: {ore:10}, val: 1.2 }, range: { cost: {ore:15}, val: 1.1 }, rate: { cost: {ore:12}, val: 1.15 } } },
-      FROST: { name: 'ป้อมน้ำแข็ง', tier: 2, cost: { gold: 80, ore: 10 }, stats: { dmg: 45, range: 2.1, rate: 1.2, slow: 0.35, projectileSpeed: 350 }, upgrades: { dmg: { cost: {ore:15}, val: 1.3 }, range: { cost: {ore:15}, val: 1.1 }, slow: { cost: {ore:30}, val: 1.2 } } },
-      ROCKET: { name: 'ป้อมจรวด', tier: 2, cost: { gold: 120, ore: 30 }, stats: { dmg: 40, range: 2.8, rate: 0.4, splash: 1.0, projectileSpeed: 300 }, upgrades: { dmg: { cost: {ore:40}, val: 1.25 }, range: { cost: {ore:30}, val: 1.08 }, splash: { cost: {ore:50}, val: 1.2 } } },
-      ARTILLERY: { name: 'ป้อมปืนใหญ่', tier: 3, cost: { gold: 200, ore: 50 }, stats: { dmg: 80, range: 4.5, rate: 0.25, splash: 1.5, minRange: 1.8, projectileSpeed: 200 }, upgrades: { dmg: { cost: {ore:80}, val: 1.2 }, range: { cost: {ore:60}, val: 1.1 }, splash: { cost: {ore:100}, val: 1.15 } } }
-    },
-     BUILDING_TYPES: {
-      MINE: { name: 'เหมืองแร่', tier: 1, cost: { gold: 40, ore: 0 }, stats: { rate: 5, yield: 2 } },
-      BARRACKS: { name: 'ค่ายทหาร', tier: 3, cost: { gold: 150, ore: 20 }, limit: 1 }
-    },
-    ENEMY_TYPES: {
-      RUNNER: { hp: 80, speed: 60, reward: 20, type: 'normal' },
-      BRUTE: { hp: 250, speed: 40, reward: 50, type: 'elite' },
-      FLYER: { hp: 100, speed: 75, reward: 80, type: 'normal', flying: true },
-      BOSS: { hp: 2000, speed: 35, reward: 100, type: 'boss' }
-    },
-    WAVE_COMPOSITION: [
-        { RUNNER: 10 }, { RUNNER: 15 }, { RUNNER: 10, BRUTE: 2 }, { RUNNER: 20, FLYER: 5 }, { BRUTE: 8, FLYER: 5 },
-        { RUNNER: 25, BRUTE: 5 }, { FLYER: 15, BRUTE: 5 }, { RUNNER: 20, BRUTE: 10 }, { BRUTE: 15, FLYER: 10 }, { BOSS: 1, RUNNER: 20 }
-    ],
-    BIOME_MODIFIERS: {
-      GRASSLAND: { name: 'ทุ่งหญ้า', desc: 'สมดุล ไม่มีผลพิเศษ', color: 'var(--safe)', background: 'var(--bg-grassland)', path: 'var(--path-grassland)', mods: {} },
-      DESERT: { name: 'ทะเลทราย', desc: 'ป้อมยิงช้าลง 5%, ศัตรู HP -10%', color: 'var(--sand)', background: 'var(--bg-desert)', path: 'var(--path-desert)', mods: { towerRate: 0.95, enemyHP: 0.9 } },
-      FROSTLANDS: { name: 'แดนน้ำแข็ง', desc: 'Frost Tower สโลว์ x1.2, ป้อม AOE Dmg -15%', color: 'var(--ice)', background: 'var(--bg-frostlands)', path: 'var(--path-frostlands)', mods: { frostSlow: 1.2, splashDmg: 0.85 } },
-      VOLCANIC: { name: 'เขตภูเขาไฟ', desc: 'ศัตรูต้านทาน AOE, ดรอปแร่มากขึ้น', color: 'var(--lava)', background: 'var(--bg-volcanic)', path: 'var(--path-volcanic)', mods: { enemySplashResist: 0.2, oreYield: 1.25 } }
-    },
-    ENEMY_DROPS: {
-      normal: { components: 0.15, gears: 0.03 },
-      elite: { components: 0.4, gears: 0.1 },
-      boss: { components: 1, gears: 0.5, cores: 1 }
+// ===== Atlas Loader (Global) =====
+const Atlas = { img:new Image(), frames:{}, ready:false };
+function normalizeFrames(map){
+  if (map.frames && !Array.isArray(map.frames)) return map.frames;       // {frames:{name:{x,y,w,h}}}
+  if (Array.isArray(map.frames)) {                                       // [{filename, frame:{x,y,w,h}}]
+    const out={};
+    for(const f of map.frames){
+      const n=(f.filename||'').replace(/\.(png|jpe?g)$/i,'');
+      const fr=f.frame||f; out[n]={x:fr.x,y:fr.y,w:fr.w,h:fr.h,pivot:f.pivot||{x:.5,y:.5}};
     }
+    return out;
+  }
+  return {};
+}
+async function loadAtlas(png='assets/atlas.png', json='assets/atlas.json'){
+  try{
+    const map = await fetch(json).then(r=>r.json());
+    Atlas.frames = normalizeFrames(map);
+    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src=png; });
+    Atlas.ready = true;
+    console.log('[Atlas] ready', Object.keys(Atlas.frames).length);
+    // Badge เล็ก ๆ แจ้งสถานะ
+    const el=document.createElement('div');
+    el.style.cssText='position:fixed;top:10px;left:10px;z-index:9999;background:#0b1220cc;color:#e2e8f0;border:1px solid #243041;border-radius:8px;padding:6px 10px;font:12px system-ui';
+    el.textContent = `Atlas ✓ frames:${Object.keys(Atlas.frames).length}`;
+    document.body.appendChild(el); setTimeout(()=>el.remove(),2500);
+  }catch(e){ console.warn('[Atlas] load failed', e); Atlas.ready=false; }
+}
+function drawFrame(ctx, name, x, y, w, h, rot=0){
+  const f = Atlas.frames?.[name]; if(!Atlas.ready || !f) return false;
+  ctx.save(); ctx.translate(x,y); if(rot) ctx.rotate(rot);
+  ctx.drawImage(Atlas.img, f.x,f.y,f.w,f.h, -w/2,-h/2, w,h);
+  ctx.restore(); return true;
+}
+window.Atlas=Atlas; window.drawFrame=drawFrame; // ให้เช็คใน Console ได้
+
+// ===== GAME CONFIG =====
+const CONFIG = {
+  GRID:{ COLS:24, ROWS:14 },
+  CITADEL_TIERS:{
+    1:{ hp:100, unlocks:['GUN','MINE'] },
+    2:{ hp:150, cost:{gold:100,components:50}, unlocks:['FROST','ROCKET'] },
+    3:{ hp:220, cost:{gold:1200,gears:25}, unlocks:['ARTILLERY','BARRACKS'] },
+    4:{ hp:350, cost:{gold:3000,cores:5}, unlocks:['METEOR_STRIKE'] }
+  },
+  TOWER_TYPES:{
+    GUN:{ name:'ป้อมปืนกล', tier:1, cost:{gold:30,ore:0}, stats:{ dmg:35, range:2.3, rate:5.9, projectileSpeed:450 } },
+    FROST:{ name:'ป้อมน้ำแข็ง', tier:2, cost:{gold:80,ore:10}, stats:{ dmg:45, range:2.1, rate:1.2, slow:0.35, projectileSpeed:350 } },
+    ROCKET:{ name:'ป้อมจรวด', tier:2, cost:{gold:120,ore:30}, stats:{ dmg:40, range:2.8, rate:0.4, splash:1.0, projectileSpeed:300 } },
+    ARTILLERY:{ name:'ป้อมปืนใหญ่', tier:3, cost:{gold:200,ore:50}, stats:{ dmg:80, range:4.5, rate:0.25, splash:1.5, minRange:1.8, projectileSpeed:200 } }
+  },
+  BUILDING_TYPES:{
+    MINE:{ name:'เหมืองแร่', tier:1, cost:{gold:40,ore:0}, stats:{ rate:5, yield:2 } },
+    BARRACKS:{ name:'ค่ายทหาร', tier:3, cost:{gold:150,ore:20}, limit:1 }
+  },
+  ENEMY_TYPES:{
+    RUNNER:{ hp:80, speed:60, reward:20, type:'normal' },
+    BRUTE:{ hp:250, speed:40, reward:50, type:'elite' },
+    FLYER:{ hp:100, speed:75, reward:80, type:'normal', flying:true },
+    BOSS:{ hp:2000, speed:35, reward:100, type:'boss' }
+  },
+  WAVE_COMPOSITION:[
+    {RUNNER:10},{RUNNER:15},{RUNNER:10,BRUTE:2},{RUNNER:20,FLYER:5},{BRUTE:8,FLYER:5},
+    {RUNNER:25,BRUTE:5},{FLYER:15,BRUTE:5},{RUNNER:20,BRUTE:10},{BRUTE:15,FLYER:10},{BOSS:1,RUNNER:20}
+  ],
+  BIOME_MODIFIERS:{
+    GRASSLAND:{ name:'ทุ่งหญ้า', desc:'สมดุล ไม่มีผลพิเศษ', color:'var(--safe)', background:'var(--bg-grassland)', path:'var(--path-grassland)', mods:{} },
+    DESERT:{ name:'ทะเลทราย', desc:'ป้อมยิงช้าลง 5%, ศัตรู HP -10%', color:'var(--sand)', background:'var(--bg-desert)', path:'var(--path-desert)', mods:{ towerRate:0.95, enemyHP:0.9 } },
+    FROSTLANDS:{ name:'แดนน้ำแข็ง', desc:'Frost Tower สโลว์ x1.2, ป้อม AOE Dmg -15%', color:'var(--ice)', background:'var(--bg-frostlands)', path:'var(--path-frostlands)', mods:{ frostSlow:1.2, splashDmg:0.85 } },
+    VOLCANIC:{ name:'เขตภูเขาไฟ', desc:'ศัตรูต้านทาน AOE, ดรอปแร่มากขึ้น', color:'var(--lava)', background:'var(--bg-volcanic)', path:'var(--path-volcanic)', mods:{ enemySplashResist:0.2, oreYield:1.25 } }
+  },
+  ENEMY_DROPS:{
+    normal:{ components:0.15, gears:0.03 },
+    elite:{ components:0.4, gears:0.1 },
+    boss:{ components:1, gears:0.5, cores:1 }
+  }
+};
+
+const state = {
+  mode:'map-select', citadelTier:1, citadelHP:100,
+  gold:200, ore:50, components:0, gears:0, cores:0,
+  wave:0, speed:1,
+  towers:[], buildings:[], enemies:[], bullets:[], effects:[], path:[], pathGrid:new Set(),
+  lastTime:0, buildMode:null, selectedEntity:null,
+  biome:'GRASSLAND', mouse:{x:0,y:0}, decorations:[]
+};
+
+const game = document.getElementById('game');
+const g = game.getContext('2d');
+const buildMenu = document.getElementById('buildMenu');
+
+// ===== Core Classes =====
+class Entity{ constructor(c,r){ this.c=c; this.r=r; const {x,y}=tileCenter(c,r); this.x=x; this.y=y; } center(){ return {x:this.x,y:this.y}; } update(dt){} draw(ctx){} }
+
+class Tower extends Entity{
+  constructor(c,r,key){ super(c,r); this.key=key; this.type='tower';
+    this.def=CONFIG.TOWER_TYPES[key]; this.stats=JSON.parse(JSON.stringify(this.def.stats));
+    this.cooldown=0; this.target=null; this.angle=0; this.level=1; this.invested=this.def.cost;
+  }
+  update(dt){
+    this.cooldown -= dt;
+    if(this.target && (!this.target.alive || dist(this.x,this.y,this.target.x,this.target.y) > this.stats.range*TS().w)){ this.target=null; }
+    if(!this.target) this.findTarget();
+    if(this.target){ this.angle = Math.atan2(this.target.y - this.y, this.target.x - this.x); if(this.cooldown<=0) this.shoot(); }
+  }
+  findTarget(){
+    let best=null, maxProg=-1;
+    for(const e of state.enemies){
+      if(e.def.flying && this.key==='ROCKET') continue;
+      const d=dist(this.x,this.y,e.x,e.y);
+      if(d <= this.stats.range*TS().w && e.pathProgress>maxProg){ best=e; maxProg=e.pathProgress; }
+    }
+    this.target = best;
+  }
+  shoot(){
+    const rateMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.towerRate || 1;
+    this.cooldown = 1 / (this.stats.rate * rateMod);
+    state.bullets.push(new Bullet(this.x, this.y, this.target, this));
+  }
+  draw(ctx){
+    const size = TS().w * 0.8;
+    const baseName   = `tower_${this.key.toLowerCase()}_base`;
+    const turretName = `tower_${this.key.toLowerCase()}_turret`;
+
+    // Base
+    if(!drawFrame(ctx, baseName, this.x, this.y, size, size)){
+      ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(this.x,this.y,15,0,Math.PI*2); ctx.fill();
+    }
+    // Turret (rotated)
+    ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle + Math.PI/2);
+    if(!drawFrame(ctx, turretName, 0, 0, size, size)){
+      ctx.fillStyle = '#22d3ee'; ctx.fillRect(-4,-4,8,20);
+    }
+    ctx.restore();
+
+    // Range ring when selected
+    if(state.selectedEntity===this){
+      ctx.save(); ctx.globalAlpha=.2; ctx.fillStyle='#fff'; ctx.beginPath();
+      ctx.arc(this.x,this.y,this.stats.range*TS().w,0,Math.PI*2); ctx.fill(); ctx.restore();
+    }
+  }
+}
+
+class Building extends Entity{
+  constructor(c,r,key){ super(c,r); this.key=key; this.type='building'; this.def=CONFIG.BUILDING_TYPES[key]; this.timer=0; }
+  update(dt){
+    if(this.key==='MINE'){
+      this.timer += dt;
+      if(this.timer >= this.def.stats.rate){
+        this.timer = 0;
+        const oreMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.oreYield || 1;
+        state.ore += this.def.stats.yield * oreMod;
+        state.effects.push(new FloatingText(`+${Math.round(this.def.stats.yield*oreMod)} Ore`, this.x, this.y));
+      }
+    }
+  }
+  draw(ctx){
+    const size = TS().w * 0.9;
+    if(!drawFrame(ctx, this.key.toLowerCase(), this.x, this.y, size, size)){
+      const ts=TS(); ctx.fillStyle='#94a3b8'; ctx.fillRect(this.x-ts.w/2+4, this.y-ts.h/2+4, ts.w-8, ts.h-8);
+      ctx.fillStyle='#facc15'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(this.key==='MINE'?'⛏️':'🏛️', this.x, this.y);
+    }
+  }
+}
+
+class Enemy{
+  constructor(key){
+    this.key=key; this.def=CONFIG.ENEMY_TYPES[key];
+    const startPos=state.path[0]; this.x=startPos.x; this.y=startPos.y;
+    this.pathIndex=0; this.pathProgress=0;
+    const hpMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.enemyHP || 1;
+    this.maxHp = Math.floor(this.def.hp * (1 + state.wave * 0.1) * hpMod);
+    this.hp=this.maxHp; this.alive=true; this.slowTimer=0; this.slowFactor=1;
+    this.animT=0;
+  }
+  update(dt){
+    this.animT += dt;
+    if(this.slowTimer>0) this.slowTimer -= dt; else this.slowFactor=1;
+    const target = state.path[this.pathIndex+1];
+    if(!target){ this.alive=false; state.citadelHP--; if(state.citadelHP<=0) toast("ฐานทัพถูกทำลาย!"); return; }
+    const angle=Math.atan2(target.y - this.y, target.x - this.x);
+    const speed=this.def.speed * this.slowFactor * dt;
+    this.x += Math.cos(angle)*speed; this.y += Math.sin(angle)*speed;
+    this.pathProgress += speed; if(dist(this.x,this.y,target.x,target.y)<5) this.pathIndex++;
+  }
+  takeDamage(dmg, splashResistMod=0){
+    const finalDmg = dmg * (1 - splashResistMod);
+    this.hp -= finalDmg;
+    if(this.hp<=0 && this.alive){
+      this.alive=false; state.gold += this.def.reward;
+      const drop = CONFIG.ENEMY_DROPS[this.def.type];
+      if(drop){ for(const [item,ch] of Object.entries(drop)){ if(Math.random()<ch){ state[item]++; state.effects.push(new FloatingText(`+1 ${item}`, this.x, this.y-20)); updateHUD(); } } }
+    }
+  }
+  draw(ctx){
+    const size = this.key==='BOSS'?40:24;
+    const base = `enemy_${this.key.toLowerCase()}`;
+    const fi = Math.floor(this.animT*10)%6;
+    let ok = drawFrame(ctx, `${base}_${fi}`, this.x, this.y, size*2, size*2);
+    if(!ok) ok = drawFrame(ctx, base, this.x, this.y, size*2, size*2);
+    if(!ok){
+      ctx.save(); ctx.translate(this.x,this.y);
+      if(this.key==='RUNNER'){ ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
+      if(this.key==='BRUTE'){ ctx.fillStyle='#a855f7'; ctx.fillRect(-10,-10,20,20); }
+      if(this.key==='FLYER'){ ctx.fillStyle='#eab308'; ctx.beginPath(); ctx.moveTo(0,-10);ctx.lineTo(10,10);ctx.lineTo(-10,10);ctx.closePath();ctx.fill(); }
+      if(this.key==='BOSS'){ ctx.fillStyle='#dc2626'; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    }
+
+    if(this.slowTimer>0){ ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2; ctx.globalAlpha=.7; ctx.beginPath(); ctx.arc(this.x,this.y,size,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=1; }
+    const barY=this.y-size-5; ctx.fillStyle='#1e293b'; ctx.fillRect(this.x-15,barY,30,4); ctx.fillStyle='#16a34a'; ctx.fillRect(this.x-15,barY,30*(this.hp/this.maxHp),4);
+  }
+}
+
+class Bullet{
+  constructor(x,y,target,tower){ this.x=x; this.y=y; this.target=target; this.tower=tower; this.alive=true; }
+  update(dt){
+    if(!this.target.alive){ this.alive=false; return; }
+    const angle=Math.atan2(this.target.y-this.y, this.target.x-this.x);
+    const speed=this.tower.stats.projectileSpeed*dt; this.x+=Math.cos(angle)*speed; this.y+=Math.sin(angle)*speed;
+    if(dist(this.x,this.y,this.target.x,this.target.y)<10) this.hit();
+  }
+  hit(){
+    this.alive=false;
+    const splashMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.splashDmg || 1;
+    const splashRes = CONFIG.BIOME_MODIFIERS[state.biome].mods.enemySplashResist || 0;
+    if(this.tower.stats.splash>0){
+      state.effects.push(new Explosion(this.target.x,this.target.y,this.tower.stats.splash*TS().w));
+      state.enemies.forEach(e=>{ if(dist(this.target.x,this.target.y,e.x,e.y) < this.tower.stats.splash*TS().w){ e.takeDamage(this.tower.stats.dmg*splashMod, splashRes); } });
+    }else{
+      this.target.takeDamage(this.tower.stats.dmg);
+    }
+    if(this.tower.stats.slow>0){ const slowMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.frostSlow || 1; this.target.slowFactor = 1 - (this.tower.stats.slow*slowMod); this.target.slowTimer = 2; }
+  }
+  draw(ctx){
+    // ไม่ใช้เฟรมกระสุนก็ได้ ใช้วงกลมง่าย ๆ
+    if(this.tower.key==='GUN') ctx.fillStyle='#67e8f9';
+    else if(this.tower.key==='FROST') ctx.fillStyle='#7dd3fc';
+    else if(this.tower.key==='ROCKET') ctx.fillStyle='#fb923c';
+    else ctx.fillStyle='#94a3b8';
+    ctx.beginPath(); ctx.arc(this.x,this.y,4,0,Math.PI*2); ctx.fill();
+  }
+}
+
+class Effect{ constructor(x,y){ this.x=x; this.y=y; this.alive=true; this.life=1; } update(dt){ this.life-=dt; if(this.life<=0) this.alive=false; } draw(ctx){} }
+class Explosion extends Effect{
+  constructor(x,y,radius){ super(x,y); this.radius=radius; this.life=0.4; }
+  draw(ctx){
+    const p = 1 - (this.life/0.4);
+    // ใช้เฟรม vfx ถ้ามี
+    const fi = Math.min(5, Math.floor(p*6));
+    if(!drawFrame(ctx, `vfx_explosion_${fi}`, this.x, this.y, this.radius, this.radius)){
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * p, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(251,146,60,${1-p})`; ctx.fill();
+    }
+  }
+}
+class FloatingText extends Effect{
+  constructor(text,x,y){ super(x,y); this.text=text; this.life=1.2; }
+  update(dt){ super.update(dt); this.y -= 20*dt; }
+  draw(ctx){ ctx.font='bold 12px Segoe UI'; ctx.fillStyle=`rgba(250,250,250,${this.life/1.2})`; ctx.textAlign='center'; ctx.fillText(this.text,this.x,this.y); }
+}
+
+// ===== Logic =====
+function initGame(){
+  resize(); window.addEventListener('resize',resize);
+  game.addEventListener('mousemove', e=>{ const r=game.getBoundingClientRect(); state.mouse.x=e.clientX-r.left; state.mouse.y=e.clientY-r.top; });
+  game.addEventListener('click', handleCanvasClick);
+  window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(state.buildMode){ state.buildMode=null; toast('ยกเลิกการสร้าง'); } else if(state.selectedEntity){ state.selectedEntity=null; updateSelectedInfo(); toast('ยกเลิกการเลือก'); } }});
+  buildPath(); updateCitadelUI(); updateBuildMenu(); updateHUD();
+  state.citadelHP = CONFIG.CITADEL_TIERS[state.citadelTier].hp;
+  generateDecorations(); loop(0);
+}
+function generateDecorations(){ for(let i=0;i<50;i++){ const c=Math.floor(Math.random()*CONFIG.GRID.COLS), r=Math.floor(Math.random()*CONFIG.GRID.ROWS); if(!state.pathGrid.has(`${c},${r}`)) state.decorations.push({c,r}); } }
+function startWave(){
+  if(state.enemies.length>0) return toast("กำจัดศัตรูให้หมดก่อน");
+  state.wave++;
+  const waveData = CONFIG.WAVE_COMPOSITION[(state.wave-1)%CONFIG.WAVE_COMPOSITION.length];
+  let spawnQueue=[]; for(const [k,c] of Object.entries(waveData)){ for(let i=0;i<c;i++) spawnQueue.push(k); }
+  const spawnInterval = setInterval(()=>{ if(spawnQueue.length>0){ state.enemies.push(new Enemy(spawnQueue.shift())); } else { clearInterval(spawnInterval); } }, 800/state.speed);
+}
+function handleCanvasClick(){
+  const {c,r}=worldToTile(state.mouse.x,state.mouse.y);
+  if(c<0||r<0||c>=CONFIG.GRID.COLS||r>=CONFIG.GRID.ROWS) return;
+  if(state.buildMode) placeEntity(c,r);
+  else { const hit=[...state.towers,...state.buildings].find(e=>e.c===c && e.r===r); state.selectedEntity=hit||null; updateSelectedInfo(); }
+}
+function placeEntity(c,r){
+  if(state.pathGrid.has(`${c},${r}`)) return toast("ไม่สามารถสร้างบนทางเดินได้");
+  if([...state.towers,...state.buildings].some(e=>e.c===c && e.r===r)) return toast("มีสิ่งก่อสร้างอยู่แล้ว");
+  const key=state.buildMode, isTower=!!CONFIG.TOWER_TYPES[key], def=isTower?CONFIG.TOWER_TYPES[key]:CONFIG.BUILDING_TYPES[key];
+  if(state.gold>=def.cost.gold && state.ore>=(def.cost.ore||0)){
+    state.gold-=def.cost.gold; state.ore-=(def.cost.ore||0);
+    if(isTower) state.towers.push(new Tower(c,r,key)); else state.buildings.push(new Building(c,r,key));
+    state.buildMode=null; updateHUD();
+  }else toast('ทรัพยากรไม่พอ');
+}
+function loop(ts){ if(!state.lastTime) state.lastTime=ts; const dt=Math.min(0.05,(ts-state.lastTime)/1000); state.lastTime=ts; const u=dt*state.speed; update(u); draw(); requestAnimationFrame(loop); }
+function update(dt){ if(state.mode!=='play') return; state.towers.forEach(t=>t.update(dt)); state.buildings.forEach(b=>b.update(dt));
+  state.bullets=state.bullets.filter(b=>b.alive); state.bullets.forEach(b=>b.update(dt));
+  state.enemies=state.enemies.filter(e=>e.alive); state.enemies.forEach(e=>e.update(dt));
+  state.effects=state.effects.filter(e=>e.alive); state.effects.forEach(e=>e.update(dt)); updateHUD();
+}
+function draw(){
+  const root=getComputedStyle(document.documentElement);
+  const biomeBg=root.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
+  const pathColor=root.getPropertyValue(`--path-${state.biome.toLowerCase()}`).trim();
+  g.fillStyle=biomeBg; g.fillRect(0,0,game.width,game.height);
+  const ts=TS();
+  // path
+  g.fillStyle=pathColor; g.strokeStyle="#00000033"; g.lineWidth=2;
+  for(const p of state.path){ const {x,y}=p; g.beginPath(); g.arc(x,y,ts.w*0.6,0,Math.PI*2); g.fill(); g.stroke(); }
+  // decorations
+  g.fillStyle='#14532d'; state.decorations.forEach(d=>{ const {x,y}=tileCenter(d.c,d.r); g.beginPath(); g.arc(x,y,Math.random()*8+8,0,Math.PI*2); g.fill(); });
+  // entities
+  state.buildings.forEach(e=>e.draw(g)); state.towers.forEach(e=>e.draw(g)); state.enemies.forEach(e=>e.draw(g)); state.bullets.forEach(e=>e.draw(g)); state.effects.forEach(e=>e.draw(g));
+  // placement preview
+  if(state.buildMode){ const {c,r}=worldToTile(state.mouse.x,state.mouse.y); if(c>=0&&r>=0){ const {x,y}=tileCenter(c,r); const def=CONFIG.TOWER_TYPES[state.buildMode]||CONFIG.BUILDING_TYPES[state.buildMode]; const can=!state.pathGrid.has(`${c},${r}`)&&![...state.towers,...state.buildings].some(e=>e.c===c&&e.r===r);
+      g.globalAlpha=.5; g.fillStyle=can?'#22c55e':'#ef4444'; g.fillRect(x-ts.w/2,y-ts.h/2,ts.w,ts.h);
+      if(def.stats?.range){ g.beginPath(); g.strokeStyle='#fff'; g.arc(x,y,def.stats.range*ts.w,0,Math.PI*2); g.stroke(); }
+      g.globalAlpha=1; } }
+}
+function updateHUD(){ const tier=CONFIG.CITADEL_TIERS[state.citadelTier];
+  document.getElementById('citadelHP').textContent=state.citadelHP;
+  document.getElementById('citadelMaxHP').textContent=tier.hp;
+  document.getElementById('citadelTier').textContent=state.citadelTier;
+  document.getElementById('gold').textContent=Math.floor(state.gold);
+  document.getElementById('ore').textContent=Math.floor(state.ore);
+  document.getElementById('components').textContent=Math.floor(state.components);
+  document.getElementById('gears').textContent=Math.floor(state.gears);
+  document.getElementById('cores').textContent=Math.floor(state.cores);
+  document.getElementById('wave').textContent=state.wave;
+}
+function updateBuildMenu(){
+  buildMenu.innerHTML=''; document.getElementById('buildTier').textContent=state.citadelTier;
+  const available=[...Object.entries(CONFIG.TOWER_TYPES), ...Object.entries(CONFIG.BUILDING_TYPES)].filter(([k,d])=>d.tier<=state.citadelTier);
+  for(const [key,data] of available){
+    const btn=document.createElement('button'); btn.className='btn'; btn.textContent=`${data.name} (${data.cost.gold}G)`;
+    btn.onclick=()=>{ if(state.buildMode===key){ state.buildMode=null; toast('ยกเลิกการสร้าง'); } else { state.buildMode=key; state.selectedEntity=null; updateSelectedInfo(); } };
+    buildMenu.appendChild(btn);
+  }
+}
+function updateSelectedInfo(){ const box=document.getElementById('selectedInfo'); const e=state.selectedEntity; if(!e){ box.innerHTML=`<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`; return; } box.innerHTML=`<b>${e.def.name}</b> (Level ${e.level||1})`; }
+function updateCitadelUI(){
+  const container=document.getElementById('citadelTiers'); container.innerHTML='';
+  for(let i=2;i<=4;i++){ const tier=CONFIG.CITADEL_TIERS[i]; const div=document.createElement('div'); div.className='tier';
+    const costHtml=Object.entries(tier.cost||{}).map(([k,v])=>`${v} ${k}`).join(', ')||'—';
+    const unlocksHtml=(tier.unlocks||[]).map(k=>CONFIG.TOWER_TYPES[k]?.name||CONFIG.BUILDING_TYPES[k]?.name||k).join(', ');
+    div.innerHTML=`<h4>Tier ${i}</h4><p>ปลดล็อค: ${unlocksHtml}</p><button id="upgradeTier${i}" class="btn">อัปเกรด (${costHtml})</button>`;
+    container.appendChild(div);
+    const btn=document.getElementById(`upgradeTier${i}`);
+    if(state.citadelTier>=i){ btn.textContent='✅ อัปเกรดแล้ว'; btn.disabled=true; }
+    else if(state.citadelTier!==i-1){ btn.textContent='ต้องอัปเกรด Tier ก่อนหน้า'; btn.disabled=true; }
+    else{ btn.onclick=()=>upgradeCitadel(); }
+  }
+}
+function upgradeCitadel(){
+  const next=state.citadelTier+1; if(!CONFIG.CITADEL_TIERS[next]) return;
+  const cost=CONFIG.CITADEL_TIERS[next].cost||{}; const ok=Object.entries(cost).every(([k,v])=>state[k]>=v);
+  if(ok){ Object.entries(cost).forEach(([k,v])=>state[k]-=v); state.citadelTier=next; const t=CONFIG.CITADEL_TIERS[next]; state.citadelHP=t.hp; toast(`ฐานทัพอัปเกรดเป็น Tier ${next}!`); updateHUD(); updateCitadelUI(); updateBuildMenu(); }
+  else toast('ทรัพยากรไม่พอ');
+}
+
+// ===== Events =====
+document.getElementById('btnCitadel').onclick=()=>document.getElementById('citadelModal').classList.add('visible');
+document.getElementById('closeCitadelModal').onclick=()=>document.getElementById('citadelModal').classList.remove('visible');
+document.getElementById('btnSpeed').onclick=()=>{ state.speed=(state.speed===1?2:1); document.getElementById('btnSpeed').textContent=`⏩ Speed x${state.speed}`; };
+document.getElementById('btnStart').onclick=startWave;
+
+function setupWorldSelection(){
+  const worldCanvas=document.getElementById('world'); const wCtx=worldCanvas.getContext('2d'); let pendingBiome=null;
+  function drawWorldMap(){ const TW=worldCanvas.width/8, TH=worldCanvas.height/5; wCtx.clearRect(0,0,worldCanvas.width,worldCanvas.height);
+    let i=0; const biomes=Object.keys(CONFIG.BIOME_MODIFIERS); const root=getComputedStyle(document.documentElement);
+    for(let r=0;r<5;r++){ for(let c=0;c<8;c++){ const bk=biomes[i%biomes.length]; const bd=CONFIG.BIOME_MODIFIERS[bk]; const varName=bd.color.replace('var(','').replace(')',''); wCtx.fillStyle=root.getPropertyValue(varName).trim(); wCtx.fillRect(c*TW, r*TH, TW-2, TH-2); i++; } }
+  }
+  worldCanvas.onclick=e=>{ const rect=worldCanvas.getBoundingClientRect(); const x=e.clientX-rect.left, y=e.clientY-rect.top; const TW=worldCanvas.width/8, TH=worldCanvas.height/5;
+    const c=Math.floor(x/TW), r=Math.floor(y/TH); const biomes=Object.keys(CONFIG.BIOME_MODIFIERS); const idx=(r*8+c)%biomes.length; pendingBiome=biomes[idx];
+    const preview=document.getElementById('zonePreview'); const bd=CONFIG.BIOME_MODIFIERS[pendingBiome]; preview.innerHTML=`<b>${bd.name}:</b> ${bd.desc}`; document.getElementById('btnConfirm').disabled=false;
   };
+  document.getElementById('btnConfirm').onclick=async()=>{ if(pendingBiome){ state.biome=pendingBiome; state.mode='play';
+      document.getElementById('selectionContent').style.display='none'; document.getElementById('loadingOverlay').style.display='block';
+      await loadAtlas('assets/atlas.png','assets/atlas.json'); // โหลด atlas ครั้งเดียวพอ
+      document.getElementById('worldOverlay').classList.remove('visible'); toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`); initGame(); } };
+  drawWorldMap();
+}
 
-  const state = {
-    mode: 'map-select', citadelTier: 1, citadelHP: 100,
-    gold: 200, ore: 50, components: 0, gears: 0, cores: 0,
-    wave: 0, speed: 1,
-    towers: [], buildings: [], enemies: [], bullets: [], effects: [], path: [], pathGrid: new Set(),
-    lastTime: 0, buildMode: null, selectedEntity: null,
-    biome: 'GRASSLAND', mouse: {x:0, y:0}, decorations: []
-  };
+// ===== Utilities =====
+function resize(){ const w=document.querySelector('section').clientWidth; game.width=w; game.height=w*(CONFIG.GRID.ROWS/CONFIG.GRID.COLS); }
+function buildPath(){ const raw=[{c:0,r:7},{c:1,r:7},{c:2,r:7},{c:3,r:7},{c:4,r:7},{c:5,r:6},{c:6,r:5},{c:7,r:5},{c:8,r:5},{c:9,r:5},{c:10,r:6},{c:11,r:7},{c:12,r:8},{c:13,r:8},{c:14,r:8},{c:15,r:8},{c:16,r:7},{c:17,r:6},{c:18,r:6},{c:19,r:6},{c:20,r:6},{c:21,r:7},{c:22,r:7},{c:23,r:7}];
+  state.path=raw.map(p=>tileCenter(p.c,p.r)); state.pathGrid=new Set(raw.map(p=>`${p.c},${p.r}`));
+}
+function TS(){ return { w:game.width/CONFIG.GRID.COLS, h:game.height/CONFIG.GRID.ROWS }; }
+function tileCenter(c,r){ const t=TS(); return { x:(c+0.5)*t.w, y:(r+0.5)*t.h }; }
+function worldToTile(px,py){ const t=TS(); return { c:Math.floor(px/t.w), r:Math.floor(py/t.h) }; }
+function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
+function toast(msg){ const el=document.createElement('div'); el.style.position='fixed'; el.style.bottom='20px'; el.style.left='50%'; el.style.transform='translateX(-50%)'; el.style.background='var(--pri)'; el.style.color='#0b1220'; el.style.padding='10px 20px'; el.style.borderRadius='8px'; el.style.zIndex='200'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2500); }
 
-  const game = document.getElementById('game');
-  const g = game.getContext('2d');
-  const buildMenu = document.getElementById('buildMenu');
+// Boot
+setupWorldSelection();
 
-  // --- GAME CLASSES ---
-  class Entity {
-      constructor(c, r) { this.c = c; this.r = r; const {x,y} = tileCenter(c,r); this.x=x; this.y=y; }
-      center() { return {x: this.x, y: this.y}; }
-      update(dt) {}
-      draw(ctx) {}
-  }
-
-  class Tower extends Entity {
-      constructor(c, r, key) {
-          super(c, r); this.key = key; this.type = 'tower';
-          this.def = CONFIG.TOWER_TYPES[key];
-          this.stats = JSON.parse(JSON.stringify(this.def.stats)); // Deep copy
-          this.cooldown = 0; this.target = null; this.angle = 0;
-          this.level = 1; this.invested = this.def.cost;
-      }
-      update(dt) {
-          this.cooldown -= dt;
-          if (this.target && (!this.target.alive || dist(this.x, this.y, this.target.x, this.target.y) > this.stats.range * TS().w)) {
-              this.target = null;
-          }
-          if (!this.target) this.findTarget();
-          if (this.target) {
-              this.angle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-              if (this.cooldown <= 0) this.shoot();
-          }
-      }
-      findTarget() {
-          let bestTarget = null; let maxProgress = -1;
-          for (const e of state.enemies) {
-              if (e.def.flying && this.key === 'ROCKET') continue;
-              const d = dist(this.x, this.y, e.x, e.y);
-              if (d <= this.stats.range * TS().w && e.pathProgress > maxProgress) {
-                  bestTarget = e; maxProgress = e.pathProgress;
-              }
-          }
-          this.target = bestTarget;
-      }
-      shoot() {
-          const rateMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.towerRate || 1;
-          this.cooldown = 1 / (this.stats.rate * rateMod);
-          state.bullets.push(new Bullet(this.x, this.y, this.target, this));
-      }
-      draw(ctx) {
-          const size = TS().w * 0.8;
-
-          if(!drawFrame(ctx, `${this.key}_BASE`, this.x, this.y, size, size)) {
-              // Fallback
-              ctx.fillStyle = '#475569';
-              ctx.beginPath();
-              ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
-              ctx.fill();
-          }
-          if(!drawFrame(ctx, `${this.key}_TURRET`, this.x, this.y, size, size, this.angle + Math.PI / 2)) {
-              // Fallback
-              ctx.save();
-              ctx.translate(this.x, this.y);
-              ctx.rotate(this.angle + Math.PI / 2);
-              if (this.key === 'GUN') { ctx.fillStyle = '#22d3ee'; ctx.fillRect(-4,-4,8,20); }
-              else if (this.key === 'FROST') { ctx.fillStyle = '#38bdf8'; ctx.fillRect(-8,-8,16,16); }
-              else if (this.key === 'ROCKET') { ctx.fillStyle = '#f59e0b'; ctx.fillRect(-5,-5,10,22); }
-              else if (this.key === 'ARTILLERY') { ctx.fillStyle = '#64748b'; ctx.fillRect(-6,0,12,25); }
-              ctx.restore();
-          }
-
-          if(state.selectedEntity === this){
-              ctx.save();
-              ctx.beginPath();
-              ctx.globalAlpha = 0.2;
-              ctx.fillStyle = '#FFF';
-              ctx.arc(this.x, this.y, this.stats.range * TS().w, 0, Math.PI*2);
-              ctx.fill();
-              ctx.globalAlpha = 1;
-              ctx.restore();
-          }
-      }
-  }
-
-  class Building extends Entity {
-      constructor(c, r, key) {
-          super(c,r); this.key = key; this.type = 'building';
-          this.def = CONFIG.BUILDING_TYPES[key];
-          this.timer = 0;
-      }
-      update(dt) {
-          if (this.key === 'MINE') {
-              this.timer += dt;
-              if (this.timer >= this.def.stats.rate) {
-                  this.timer = 0;
-                  const oreMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.oreYield || 1;
-                  state.ore += this.def.stats.yield * oreMod;
-                  state.effects.push(new FloatingText(`+${Math.round(this.def.stats.yield * oreMod)} Ore`, this.x, this.y));
-              }
-          }
-      }
-      draw(ctx) {
-          const size = TS().w * 0.9;
-          if(!drawFrame(ctx, this.key, this.x, this.y, size, size)){
-              // Fallback
-              const ts = TS();
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillStyle = '#94a3b8';
-              ctx.fillRect(this.x - ts.w/2 + 4, this.y - ts.h/2 + 4, ts.w-8, ts.h-8);
-              if(this.key === 'MINE') {
-                  ctx.fillStyle = '#facc15';
-                  ctx.fillText('⛏️', this.x, this.y);
-              } else {
-                  ctx.fillStyle = '#e2e8f0';
-                  ctx.fillText('🏛️', this.x, this.y);
-              }
-          }
-      }
-  }
-
-  class Enemy {
-      constructor(key) {
-          this.key = key;
-          this.def = CONFIG.ENEMY_TYPES[key];
-          const startPos = state.path[0];
-          this.x = startPos.x; this.y = startPos.y;
-          this.pathIndex = 0; this.pathProgress = 0;
-          const hpMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.enemyHP || 1;
-          this.maxHp = Math.floor(this.def.hp * (1 + state.wave * 0.1) * hpMod);
-          this.hp = this.maxHp;
-          this.alive = true;
-          this.slowTimer = 0; this.slowFactor = 1;
-      }
-      update(dt) {
-          if (this.slowTimer > 0) this.slowTimer -= dt;
-          else this.slowFactor = 1;
-
-          const target = state.path[this.pathIndex + 1];
-          if (!target) {
-              this.alive = false;
-              state.citadelHP--;
-              if(state.citadelHP <= 0) toast("ฐานทัพถูกทำลาย!");
-              return;
-          }
-          const angle = Math.atan2(target.y - this.y, target.x - this.x);
-          const speed = this.def.speed * this.slowFactor * dt;
-          this.x += Math.cos(angle) * speed;
-          this.y += Math.sin(angle) * speed;
-          this.pathProgress += speed;
-
-          if (dist(this.x, this.y, target.x, target.y) < 5) this.pathIndex++;
-      }
-      takeDamage(dmg, splashResistMod = 0) {
-          const finalDmg = dmg * (1 - splashResistMod);
-          this.hp -= finalDmg;
-          if (this.hp <= 0 && this.alive) {
-              this.alive = false;
-              state.gold += this.def.reward;
-              const dropTable = CONFIG.ENEMY_DROPS[this.def.type];
-              if (dropTable) {
-                  for (const [item, chance] of Object.entries(dropTable)) {
-                      if (Math.random() < chance) {
-                          state[item]++;
-                          state.effects.push(new FloatingText(`+1 ${item}`, this.x, this.y - 20));
-                          updateHUD();
-                      }
-                  }
-              }
-          }
-      }
-      draw(ctx) {
-          const size = this.key === 'BOSS' ? 40 : 24;
-          if(!drawFrame(ctx, this.key, this.x, this.y, size*2, size*2)) {
-              // Fallback
-              ctx.save();
-              ctx.translate(this.x, this.y);
-              if (this.key === 'RUNNER') { ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
-              if (this.key === 'BRUTE') { ctx.fillStyle = '#a855f7'; ctx.fillRect(-10,-10,20,20); }
-              if (this.key === 'FLYER') { ctx.fillStyle = '#eab308'; ctx.beginPath(); ctx.moveTo(0,-10);ctx.lineTo(10,10);ctx.lineTo(-10,10);ctx.closePath();ctx.fill(); }
-              if (this.key === 'BOSS') { ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill(); }
-              ctx.restore();
-          }
-          
-          if(this.slowTimer > 0){
-              ctx.strokeStyle = '#38bdf8';
-              ctx.lineWidth = 2;
-              ctx.globalAlpha = 0.7;
-              ctx.beginPath();
-              ctx.arc(this.x, this.y, size,0,Math.PI*2);
-              ctx.stroke();
-              ctx.globalAlpha = 1;
-          }
-
-          // Health bar
-          const barY = this.y - size - 5;
-          ctx.fillStyle = '#1e293b'; ctx.fillRect(this.x - 15, barY, 30, 4);
-          ctx.fillStyle = '#16a34a'; ctx.fillRect(this.x - 15, barY, 30 * (this.hp/this.maxHp), 4);
-      }
-  }
-
-  class Bullet {
-      constructor(x, y, target, tower) {
-          this.x = x; this.y = y; this.target = target;
-          this.tower = tower; this.alive = true;
-      }
-      update(dt) {
-          if (!this.target.alive) { this.alive = false; return; }
-          const angle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-          const speed = this.tower.stats.projectileSpeed * dt;
-          this.x += Math.cos(angle) * speed;
-          this.y += Math.sin(angle) * speed;
-
-          if (dist(this.x, this.y, this.target.x, this.target.y) < 10) this.hit();
-      }
-      hit() {
-          this.alive = false;
-          const splashMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.splashDmg || 1;
-          const splashResistMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.enemySplashResist || 0;
-
-          if (this.tower.stats.splash > 0) {
-              state.effects.push(new Explosion(this.target.x, this.target.y, this.tower.stats.splash * TS().w));
-              state.enemies.forEach(e => {
-                  if (dist(this.target.x, this.target.y, e.x, e.y) < this.tower.stats.splash * TS().w) {
-                      e.takeDamage(this.tower.stats.dmg * splashMod, splashResistMod);
-                  }
-              });
-          } else {
-              this.target.takeDamage(this.tower.stats.dmg);
-          }
-          
-          if(this.tower.stats.slow > 0){
-              const slowMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.frostSlow || 1;
-              this.target.slowFactor = 1 - (this.tower.stats.slow * slowMod);
-              this.target.slowTimer = 2; // seconds
-          }
-      }
-      draw(ctx) {
-          if(!drawFrame(ctx, 'BULLET', this.x, this.y, 8, 8)) {
-            // Fallback
-            if (this.tower.key === 'GUN') ctx.fillStyle = '#67e8f9';
-            else if (this.tower.key === 'FROST') ctx.fillStyle = '#7dd3fc';
-            else if (this.tower.key === 'ROCKET') ctx.fillStyle = '#fb923c';
-            else if (this.tower.key === 'ARTILLERY') ctx.fillStyle = '#94a3b8';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 4, 0, Math.PI*2);
-            ctx.fill();
-          }
-      }
-  }
-  
-  class Effect {
-      constructor(x,y) { this.x=x; this.y=y; this.alive=true; this.life=1; }
-      update(dt) { this.life -= dt; if(this.life <= 0) this.alive = false; }
-      draw(ctx){}
-  }
-  class Explosion extends Effect {
-      constructor(x,y,radius){ super(x,y); this.radius=radius; this.life = 0.4;}
-      draw(ctx){
-          const p = 1 - (this.life / 0.4);
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius * p, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(251, 146, 60, ${1-p})`;
-          ctx.fill();
-      }
-  }
-  class FloatingText extends Effect {
-      constructor(text, x, y){ super(x,y); this.text=text; this.life=1.2;}
-      update(dt){ super.update(dt); this.y -= 20 * dt; }
-      draw(ctx){
-          ctx.font = 'bold 12px Segoe UI';
-          ctx.fillStyle = `rgba(250, 250, 250, ${this.life / 1.2})`;
-          ctx.textAlign = 'center';
-          ctx.fillText(this.text, this.x, this.y);
-      }
-  }
-
-  // --- LOGIC ---
-  function initGame() {
-    resize();
-    window.addEventListener('resize', resize);
-    game.addEventListener('mousemove', e => {
-      const rect = game.getBoundingClientRect();
-      state.mouse.x = e.clientX - rect.left;
-      state.mouse.y = e.clientY - rect.top;
-    });
-    game.addEventListener('click', handleCanvasClick);
-    
-    // เพิ่ม Event Listener สำหรับการกดคีย์บอร์ด
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (state.buildMode) {
-          state.buildMode = null;
-          toast('ยกเลิกการสร้าง');
-        } else if (state.selectedEntity) {
-          state.selectedEntity = null;
-          updateSelectedInfo();
-          toast('ยกเลิกการเลือก');
-        }
-      }
-    });
-
-    buildPath(); updateCitadelUI(); updateBuildMenu(); updateHUD();
-    state.citadelHP = CONFIG.CITADEL_TIERS[state.citadelTier].hp;
-    generateDecorations();
-    loop(0);
-  }
-  
-  function generateDecorations() {
-      for(let i=0; i < 50; i++) {
-          const c = Math.floor(Math.random() * CONFIG.GRID.COLS);
-          const r = Math.floor(Math.random() * CONFIG.GRID.ROWS);
-          if(!state.pathGrid.has(`${c},${r}`)){
-              state.decorations.push({c,r});
-          }
-      }
-  }
-
-  function startWave() {
-      if(state.enemies.length > 0) return toast("กำจัดศัตรูให้หมดก่อน");
-      state.wave++;
-      const waveData = CONFIG.WAVE_COMPOSITION[(state.wave-1) % CONFIG.WAVE_COMPOSITION.length];
-      let spawnQueue = [];
-      for(const [key, count] of Object.entries(waveData)) {
-          for(let i=0; i<count; i++) spawnQueue.push(key);
-      }
-      
-      const spawnInterval = setInterval(() => {
-          if (spawnQueue.length > 0) {
-              state.enemies.push(new Enemy(spawnQueue.shift()));
-          } else {
-              clearInterval(spawnInterval);
-          }
-      }, 800 / state.speed);
-  }
-
-  function handleCanvasClick(){
-      const {c, r} = worldToTile(state.mouse.x, state.mouse.y);
-      if(c<0 || r<0 || c>=CONFIG.GRID.COLS || r>=CONFIG.GRID.ROWS) return;
-
-      if(state.buildMode){
-          placeEntity(c,r);
-      } else {
-         const clickedEntity = [...state.towers, ...state.buildings].find(e => e.c === c && e.r === r);
-         state.selectedEntity = clickedEntity || null;
-         updateSelectedInfo();
-      }
-  }
-
-  function placeEntity(c,r){
-      if(state.pathGrid.has(`${c},${r}`)) return toast("ไม่สามารถสร้างบนทางเดินได้");
-      if([...state.towers, ...state.buildings].some(e => e.c === c && e.r === r)) return toast("มีสิ่งก่อสร้างอยู่แล้ว");
-      
-      const key = state.buildMode;
-      const isTower = !!CONFIG.TOWER_TYPES[key];
-      const def = isTower ? CONFIG.TOWER_TYPES[key] : CONFIG.BUILDING_TYPES[key];
-
-      if (state.gold >= def.cost.gold && state.ore >= (def.cost.ore || 0)) {
-          state.gold -= def.cost.gold;
-          state.ore -= (def.cost.ore || 0);
-          if (isTower) state.towers.push(new Tower(c, r, key));
-          else state.buildings.push(new Building(c, r, key));
-          state.buildMode = null;
-          updateHUD();
-      } else {
-          toast('ทรัพยากรไม่พอ');
-      }
-  }
-  
-  function loop(ts) {
-    if(!state.lastTime) state.lastTime=ts;
-    const dt = Math.min(0.05,(ts-state.lastTime)/1000);
-    state.lastTime = ts;
-    const updateDt = dt * state.speed;
-    update(updateDt);
-    draw();
-    requestAnimationFrame(loop);
-  }
-
-  function update(dt) {
-    if (state.mode !== 'play') return;
-    state.towers.forEach(t => t.update(dt));
-    state.buildings.forEach(b => b.update(dt));
-    state.bullets = state.bullets.filter(b => b.alive);
-    state.bullets.forEach(b => b.update(dt));
-    state.enemies = state.enemies.filter(e => e.alive);
-    state.enemies.forEach(e => e.update(dt));
-    state.effects = state.effects.filter(e => e.alive);
-    state.effects.forEach(e => e.update(dt));
-    updateHUD();
-  }
-
-  function draw(){
-    const rootStyles = getComputedStyle(document.documentElement);
-    const biomeBg = rootStyles.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
-    const pathColor = rootStyles.getPropertyValue(`--path-${state.biome.toLowerCase()}`).trim();
-    
-    g.fillStyle = biomeBg;
-    g.fillRect(0,0,game.width, game.height);
-    
-    const ts = TS();
-
-    // Draw path
-    g.fillStyle = pathColor;
-    g.strokeStyle = "#00000033";
-    g.lineWidth = 2;
-    for(const p of state.path){ 
-        const {x,y} = p; 
-        g.beginPath();
-        g.arc(x, y, ts.w * 0.6, 0, Math.PI * 2);
-        g.fill();
-        g.stroke();
-    }
-    
-    // Draw decorations
-    g.fillStyle = '#14532d';
-    state.decorations.forEach(d => {
-        const {x,y} = tileCenter(d.c, d.r);
-        g.beginPath();
-        g.arc(x,y, Math.random() * 8 + 8, 0, Math.PI * 2);
-        g.fill();
-    });
-
-
-    // Draw entities
-    state.buildings.forEach(e => e.draw(g));
-    state.towers.forEach(e => e.draw(g));
-    state.enemies.forEach(e => e.draw(g));
-    state.bullets.forEach(e => e.draw(g));
-    state.effects.forEach(e => e.draw(g));
-
-    // Draw placement preview
-    if(state.buildMode){
-        const {c, r} = worldToTile(state.mouse.x, state.mouse.y);
-        if(c>=0 && r>=0){
-            const {x,y} = tileCenter(c,r);
-            const def = CONFIG.TOWER_TYPES[state.buildMode] || CONFIG.BUILDING_TYPES[state.buildMode];
-            const canPlace = !state.pathGrid.has(`${c},${r}`) && ![...state.towers, ...state.buildings].some(e => e.c === c && e.r === r);
-
-            g.globalAlpha = 0.5;
-            g.fillStyle = canPlace ? '#22c55e' : '#ef4444';
-            g.fillRect(x-ts.w/2, y-ts.h/2, ts.w, ts.h);
-            if(def.stats?.range){
-                g.beginPath();
-                g.strokeStyle = '#FFF';
-                g.arc(x,y,def.stats.range * ts.w, 0, Math.PI*2);
-                g.stroke();
-            }
-            g.globalAlpha = 1;
-        }
-    }
-  }
-
-  function updateHUD() {
-    const tierInfo = CONFIG.CITADEL_TIERS[state.citadelTier];
-    document.getElementById('citadelHP').textContent = state.citadelHP;
-    document.getElementById('citadelMaxHP').textContent = tierInfo.hp;
-    document.getElementById('citadelTier').textContent = state.citadelTier;
-    document.getElementById('gold').textContent = Math.floor(state.gold);
-    document.getElementById('ore').textContent = Math.floor(state.ore);
-    document.getElementById('components').textContent = Math.floor(state.components);
-    document.getElementById('gears').textContent = Math.floor(state.gears);
-    document.getElementById('cores').textContent = Math.floor(state.cores);
-    document.getElementById('wave').textContent = state.wave;
-  }
-  
-  function updateBuildMenu() {
-    buildMenu.innerHTML = '';
-    document.getElementById('buildTier').textContent = state.citadelTier;
-
-    const available = [...Object.entries(CONFIG.TOWER_TYPES), ...Object.entries(CONFIG.BUILDING_TYPES)]
-      .filter(([key, data]) => data.tier <= state.citadelTier);
-
-    for (const [key, data] of available) {
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.textContent = `${data.name} (${data.cost.gold}G)`;
-      
-      // --- จุดที่แก้ไข ---
-      // เปลี่ยน onclick เพื่อให้กดซ้ำเป็นการยกเลิก
-      btn.onclick = () => {
-        if (state.buildMode === key) {
-          state.buildMode = null;
-          toast('ยกเลิกการสร้าง');
-        } else {
-          state.buildMode = key;
-          state.selectedEntity = null;
-          updateSelectedInfo();
-        }
-      };
-      // --- สิ้นสุดจุดที่แก้ไข ---
-      
-      buildMenu.appendChild(btn);
-    }
-  }
-  
-  function updateSelectedInfo(){
-      const container = document.getElementById('selectedInfo');
-      const entity = state.selectedEntity;
-      if(!entity){
-          container.innerHTML = `<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`;
-          return;
-      }
-      container.innerHTML = `<b>${entity.def.name}</b> (Level ${entity.level || 1})`;
-  }
-
-  function updateCitadelUI() { /* ... unchanged ... */
-    const container = document.getElementById('citadelTiers');
-    container.innerHTML = '';
-    for (let i = 2; i <= 4; i++) {
-      const tierData = CONFIG.CITADEL_TIERS[i];
-      const div = document.createElement('div');
-      div.className = 'tier';
-      
-      let costHtml = Object.entries(tierData.cost).map(([key, val]) => `${val} ${key}`).join(', ');
-      let unlocksHtml = tierData.unlocks.map(key => CONFIG.TOWER_TYPES[key]?.name || CONFIG.BUILDING_TYPES[key]?.name || key).join(', ');
-
-      div.innerHTML = `
-        <h4>Tier ${i}</h4>
-        <p>ปลดล็อค: ${unlocksHtml}</p>
-        <button id="upgradeTier${i}" class="btn">อัปเกรด (${costHtml})</button>
-      `;
-      container.appendChild(div);
-
-      const btn = document.getElementById(`upgradeTier${i}`);
-      if (state.citadelTier >= i) {
-        btn.textContent = '✅ อัปเกรดแล้ว';
-        btn.disabled = true;
-      } else if (state.citadelTier !== i - 1) {
-        btn.textContent = 'ต้องอัปเกรด Tier ก่อนหน้า';
-        btn.disabled = true;
-      } else {
-        btn.onclick = () => upgradeCitadel();
-      }
-    }
-  }
-  
-  function upgradeCitadel() { /* ... unchanged ... */
-      const nextTier = state.citadelTier + 1;
-      if (!CONFIG.CITADEL_TIERS[nextTier]) return;
-
-      const cost = CONFIG.CITADEL_TIERS[nextTier].cost;
-      const canAfford = Object.entries(cost).every(([key, val]) => state[key] >= val);
-
-      if (canAfford) {
-          Object.entries(cost).forEach(([key, val]) => state[key] -= val);
-          state.citadelTier = nextTier;
-          const newTierData = CONFIG.CITADEL_TIERS[nextTier];
-          state.citadelHP = newTierData.hp;
-          toast(`ฐานทัพอัปเกรดเป็น Tier ${nextTier}!`);
-          updateHUD();
-          updateCitadelUI();
-          updateBuildMenu();
-      } else {
-          toast('ทรัพยากรไม่พอ');
-      }
-  }
-  
-  // Event Listeners
-  document.getElementById('btnCitadel').onclick = () => document.getElementById('citadelModal').classList.add('visible');
-  document.getElementById('closeCitadelModal').onclick = () => document.getElementById('citadelModal').classList.remove('visible');
-  document.getElementById('btnSpeed').onclick = () => {
-      state.speed = (state.speed === 1 ? 2 : 1);
-      document.getElementById('btnSpeed').textContent = `⏩ Speed x${state.speed}`;
-  };
-  document.getElementById('btnStart').onclick = startWave;
-
-  function setupWorldSelection() {
-      const worldCanvas = document.getElementById('world');
-      const wCtx = worldCanvas.getContext('2d');
-      let pendingBiome = null;
-
-      function drawWorldMap() {
-          const TILE_W = worldCanvas.width / 8;
-          const TILE_H = worldCanvas.height / 5;
-          wCtx.clearRect(0,0,worldCanvas.width, worldCanvas.height);
-          let i = 0;
-          const biomes = Object.keys(CONFIG.BIOME_MODIFIERS);
-          const rootStyles = getComputedStyle(document.documentElement);
-
-          for(let r=0; r<5; r++){
-              for(let c=0; c<8; c++){
-                  const biomeKey = biomes[i % biomes.length];
-                  const biomeData = CONFIG.BIOME_MODIFIERS[biomeKey];
-                  const colorVar = biomeData.color.replace('var(', '').replace(')', '');
-                  wCtx.fillStyle = rootStyles.getPropertyValue(colorVar).trim();
-                  wCtx.fillRect(c*TILE_W, r*TILE_H, TILE_W-2, TILE_H-2);
-                  i++;
-              }
-          }
-      }
-      
-      worldCanvas.onclick = (e) => {
-          const rect = worldCanvas.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const TILE_W = worldCanvas.width / 8;
-          const TILE_H = worldCanvas.height / 5;
-          const c = Math.floor(x/TILE_W);
-          const r = Math.floor(y/TILE_H);
-          const biomes = Object.keys(CONFIG.BIOME_MODIFIERS);
-          const biomeIndex = (r * 8 + c) % biomes.length;
-          pendingBiome = biomes[biomeIndex];
-          
-          const preview = document.getElementById('zonePreview');
-          const biomeData = CONFIG.BIOME_MODIFIERS[pendingBiome];
-          preview.innerHTML = `<b>${biomeData.name}:</b> ${biomeData.desc}`;
-          document.getElementById('btnConfirm').disabled = false;
-      };
-
-      document.getElementById('btnConfirm').onclick = async () => {
-          if (pendingBiome) {
-              state.biome = pendingBiome;
-              state.mode = 'play';
-              
-              document.getElementById('selectionContent').style.display = 'none';
-              document.getElementById('loadingOverlay').style.display = 'block';
-
-              await loadAtlas(); // Use your provided loader
-
-              document.getElementById('worldOverlay').classList.remove('visible');
-              toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`);
-              initGame();
-          }
-      };
-      
-      drawWorldMap();
-  }
-  
-  // --- UTILITIES ---
-  function resize(){ 
-      const availableWidth = document.querySelector('section').clientWidth;
-      game.width = availableWidth;
-      game.height = availableWidth * (CONFIG.GRID.ROWS / CONFIG.GRID.COLS);
-  }
-  function buildPath(){ 
-      const rawPath = [{c:0,r:7},{c:1,r:7},{c:2,r:7},{c:3,r:7},{c:4,r:7},{c:5,r:6},{c:6,r:5},{c:7,r:5},{c:8,r:5},{c:9,r:5},{c:10,r:6},{c:11,r:7},{c:12,r:8},{c:13,r:8},{c:14,r:8},{c:15,r:8},{c:16,r:7},{c:17,r:6},{c:18,r:6},{c:19,r:6},{c:20,r:6},{c:21,r:7},{c:22,r:7},{c:23,r:7}];
-      state.path = rawPath.map(p=>tileCenter(p.c,p.r));
-      state.pathGrid = new Set(rawPath.map(p => `${p.c},${p.r}`));
-  }
-  function TS(){ return {w:game.width/CONFIG.GRID.COLS, h:game.height/CONFIG.GRID.ROWS}; }
-  function tileCenter(c,r){ const t=TS(); return {x:(c+0.5)*t.w, y:(r+0.5)*t.h}; }
-  function worldToTile(px,py){ const t=TS(); return {c:Math.floor(px/t.w), r:Math.floor(py/t.h)}; }
-  function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
-  function toast(msg){
-      const el = document.createElement('div');
-      el.style.position = 'fixed'; el.style.bottom = '20px'; el.style.left = '50%';
-      el.style.transform = 'translateX(-50%)'; el.style.background = 'var(--pri)';
-      el.style.color = '#0b1220'; el.style.padding = '10px 20px';
-      el.style.borderRadius = '8px'; el.style.zIndex = '200';
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2500);
-  }
-
-  setupWorldSelection();
 })();
 </script>
 </body>
 </html>
-
