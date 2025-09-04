@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>TD Free Asset Builder – One‑Click (Atlas + Integration)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0b1220; --card:#0f172a; --ink:#e2e8f0; --mut:#9aa7bd; --line:#243041; --pri:#22d3ee; --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b; }
+  *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--ink);font:14px Inter,system-ui,Segoe UI,Roboto}
+  header{position:sticky;top:0;background:#0b1220cc;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:10}
+  .wrap{max-width:1200px;margin:0 auto;padding:12px}
+  h1{font-size:20px;margin:8px 0 0}
+  .sub{color:var(--mut);margin:2px 0 10px}
+  .grid{display:grid;grid-template-columns:1fr 320px;gap:12px}
+  @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{cursor:pointer;border:1px solid var(--line);background:linear-gradient(180deg,#1b2636,#131b28);color:var(--ink);padding:8px 12px;border-radius:10px}
+  .btn:hover{border-color:#3b4a63}
+  .btn.sec{background:#0c1626}
+  .pill{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#0c1626;color:var(--ink)}
+  .mut{color:var(--mut)}
+  .drop{border:2px dashed #3b4a63;border-radius:14px;padding:16px;text-align:center;background:#0b1220}
+  input[type="file"]{display:none}
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px solid #1a2435;padding:6px 4px;text-align:left}
+  th{color:#a8b3c7;font-weight:600}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  canvas{max-width:100%;background:#0b1220;border:1px solid var(--line);border-radius:12px}
+  code,pre{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px;display:block;white-space:pre-wrap;color:#e5e7eb}
+  .tag{display:inline-block;background:#122033;border:1px solid #203148;border-radius:8px;padding:2px 6px;margin-right:4px;color:#cbd5e1}
+  .ok{color:var(--ok)} .bad{color:var(--bad)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>TD Free Asset Builder – One‑Click (Atlas + Integration)</h1>
+    <div class="sub">ลากรูปฟรี (CC0/CC‑BY) → รวมเป็น atlas.png + atlas.json → ใช้กับเกมของ Tony ได้ทันที</div>
+  </div>
+</header>
+<main class="wrap grid">
+  <section class="panel" id="main">
+    <h3 style="margin:0 0 8px">1) นำเข้ารูปภาพ</h3>
+    <div class="row" style="margin-bottom:8px">
+      <label class="btn"><input id="filePicker" type="file" accept="image/*" multiple>📂 เลือกไฟล์</label>
+      <button class="btn sec" id="btnPlaceholders">✨ สร้างรูป Placeholder อัตโนมัติ</button>
+      <span class="pill">รวม: <b id="count">0</b> ไฟล์</span>
+    </div>
+    <div id="drop" class="drop">ลากไฟล์ PNG เข้ามาที่นี่ (เช่นจาก Kenney/OpenGameArt)</div>
+
+    <div style="margin-top:12px">
+      <table id="tbl"><thead><tr><th>ชื่อเฟรม</th><th>ขนาด</th><th>Anchor</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <h3 style="margin:16px 0 8px">2) Pack เป็น Atlas</h3>
+    <div class="row">
+      <label class="pill">Max Width <input id="maxW" type="number" value="2048" min="256" step="128" style="width:80px;margin-left:6px;background:#0b1220;color:#e2e8f0;border:1px solid #1b2a41;border-radius:6px;padding:2px 6px"></label>
+      <label class="pill"><input id="pow2" type="checkbox">&nbsp;ทำเป็น Power‑of‑Two</label>
+      <label class="pill">Padding <input id="pad" type="number" value="2" min="0" step="1" style="width:60px;margin-left:6px;background:#0b1220;color:#e2e8f0;border:1px solid #1b2a41;border-radius:6px;padding:2px 6px"></label>
+      <button class="btn" id="btnPack">🧩 Pack</button>
+      <span id="packInfo" class="mut"></span>
+    </div>
+
+    <div style="margin:10px 0"><canvas id="atlas" width="1024" height="512"></canvas></div>
+
+    <h3 style="margin:16px 0 8px">3) Export</h3>
+    <div class="row">
+      <button class="btn" id="btnExportPNG">⬇ ดาวน์โหลด atlas.png</button>
+      <button class="btn" id="btnExportJSON">⬇ ดาวน์โหลด atlas.json</button>
+      <button class="btn sec" id="btnBanner">🏁 สร้างป้าย FINAL WAVE (ฟรี)</button>
+    </div>
+
+    <h3 style="margin:16px 0 8px">4) โค้ดติดตั้งในเกม (คัดลอกไปวาง)</h3>
+    <pre class="mono" id="snippet"></pre>
+  </section>
+
+  <aside class="panel">
+    <h3 style="margin:0 0 8px">Quick Guide</h3>
+    <ol style="margin:0 0 12px 18px">
+      <li>หา asset ฟรี (แนะนำ Kenney CC0)</li>
+      <li>ลาก PNG เข้ามา → ตั้งชื่อเฟรมให้ตรงคอนเวนชัน (เช่น <span class="tag">tower_gun_base</span>, <span class="tag">enemy_runner_0</span>)</li>
+      <li>กด Pack → ดูพรีวิว</li>
+      <li>กดดาวน์โหลด atlas.png + atlas.json → วางไว้ใน <span class="mono">/assets/</span></li>
+      <li>คัดลอก “โค้ดติดตั้ง” ไปใส่ในเกม Tony v1.4</li>
+    </ol>
+    <div class="mut">Tips: ตั้ง Anchor = 0.5,0.5 สำหรับวัตถุที่ต้องหมุน (หัวป้อม/มอน)</div>
+    <hr style="border-color:#1a2435;margin:12px 0">
+    <h3 style="margin:0 0 8px">ชื่อที่แนะนำ</h3>
+    <div>
+      <div class="tag">tower_gun_base</div>
+      <div class="tag">tower_gun_turret</div>
+      <div class="tag">tower_frost_base</div>
+      <div class="tag">tower_frost_turret</div>
+      <div class="tag">tower_rocket_base</div>
+      <div class="tag">tower_rocket_turret</div>
+      <div class="tag">tower_artillery_base</div>
+      <div class="tag">tower_artillery_turret</div>
+      <div class="tag">enemy_runner_0..5</div>
+      <div class="tag">enemy_brute_0..5</div>
+      <div class="tag">enemy_flyer_0..5</div>
+      <div class="tag">enemy_boss_0..5</div>
+      <div class="tag">vfx_explosion_0..5</div>
+      <div class="tag">ui_button_round</div>
+      <div class="tag">ui_banner_finalwave</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+const state = { files: [], frames: {}, packed: [], atlasW:1024, atlasH:512 };
+const $ = (s)=>document.querySelector(s);
+const byId = (id)=>document.getElementById(id);
+
+// ---------- File ingest ----------
+function sanitize(name){ return name.toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-z0-9_]/g,'_'); }
+async function addFiles(fileList){
+  for(const f of fileList){
+    if(!f.type.startsWith('image/')) continue;
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; });
+    state.files.push({ name:sanitize(f.name), w:img.width, h:img.height, img, ax:0.5, ay:0.5 });
+  }
+  renderTable(); updateCount();
+}
+function updateCount(){ byId('count').textContent = state.files.length; }
+function renderTable(){
+  const tbody = $('#tbl tbody'); tbody.innerHTML='';
+  state.files.forEach((it,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input data-i="${idx}" class="nm" value="${it.name}" style="width:100%;background:#0b1220;color:#e2e8f0;border:1px solid #1b2a41;border-radius:6px;padding:4px"></td>
+      <td>${it.w}×${it.h}</td>
+      <td>
+        <input data-i="${idx}" class="ax" type="number" min="0" max="1" step="0.05" value="${it.ax}" style="width:64px;background:#0b1220;color:#e2e8f0;border:1px solid #1b2a41;border-radius:6px;padding:2px 6px"> ,
+        <input data-i="${idx}" class="ay" type="number" min="0" max="1" step="0.05" value="${it.ay}" style="width:64px;background:#0b1220;color:#e2e8f0;border:1px solid #1b2a41;border-radius:6px;padding:2px 6px">
+      </td>
+      <td><button class="btn sec" data-del="${idx}">ลบ</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+$('#tbl').addEventListener('input', (e)=>{
+  const el=e.target; const i=+el.getAttribute('data-i'); if(Number.isNaN(i)) return;
+  if(el.classList.contains('nm')) state.files[i].name = sanitize(el.value);
+  if(el.classList.contains('ax')) state.files[i].ax = clamp(parseFloat(el.value),0,1);
+  if(el.classList.contains('ay')) state.files[i].ay = clamp(parseFloat(el.value),0,1);
+});
+$('#tbl').addEventListener('click',(e)=>{ const i=e.target.getAttribute('data-del'); if(i==null) return; state.files.splice(+i,1); renderTable(); updateCount(); });
+
+byId('filePicker').addEventListener('change', e=> addFiles(e.target.files));
+const drop = byId('drop');
+['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.style.borderColor = '#22d3ee'; }));
+['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.style.borderColor = '#3b4a63'; }));
+drop.addEventListener('drop', e=> addFiles(e.dataTransfer.files));
+
+// ---------- Placeholder generator ----------
+byId('btnPlaceholders').addEventListener('click', ()=>{
+  const defs=[
+    ['tower_gun_base',64,64,'#3b82f6'],['tower_gun_turret',64,64,'#60a5fa'],
+    ['tower_frost_base',64,64,'#22d3ee'],['tower_frost_turret',64,64,'#7dd3fc'],
+    ['tower_rocket_base',64,64,'#f59e0b'],['tower_rocket_turret',64,64,'#fbbf24'],
+    ['tower_artillery_base',64,64,'#94a3b8'],['tower_artillery_turret',64,64,'#cbd5e1'],
+  ];
+  const enemies=['runner','brute','flyer','boss'];
+  defs.forEach(d=> state.files.push(genRect(d[0],d[1],d[2],d[3])));
+  enemies.forEach(name=>{ for(let i=0;i<6;i++){ const sz = name==='boss'?96:64; state.files.push(genChar(`${name}_${i}`, sz, sz)); } });
+  // vfx & ui banner placeholder
+  for(let i=0;i<6;i++) state.files.push(genExplosion(`vfx_explosion_${i}`,64,64,i));
+  state.files.push(genBanner('ui_banner_finalwave',512,128));
+  renderTable(); updateCount();
+});
+function genRect(name,w,h,color){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle=color; x.fillRect(0,0,w,h); x.fillStyle='#0b1220'; x.font='bold 12px Inter'; x.textAlign='center'; x.fillText(name, w/2, h/2); const img=new Image(); img.src=c.toDataURL(); return { name, w, h, img, ax:0.5, ay:0.5 } }
+function genChar(name,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='#10b981'; x.beginPath(); x.arc(w/2,h/2,Math.min(w,h)/2-4,0,Math.PI*2); x.fill(); x.strokeStyle='#064e3b'; x.lineWidth=4; x.stroke(); x.fillStyle='#0b1220'; x.font='bold 12px Inter'; x.textAlign='center'; x.fillText(name, w/2, h/2); const img=new Image(); img.src=c.toDataURL(); return { name:`enemy_${name}`, w, h, img, ax:0.5, ay:0.5 } }
+function genExplosion(name,w,h,i){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='rgba(251,146,60,0.85)'; x.beginPath(); x.arc(w/2,h/2,(i+1)*w/12,0,Math.PI*2); x.fill(); const img=new Image(); img.src=c.toDataURL(); return { name, w, h, img, ax:0.5, ay:0.5 } }
+function genBanner(name,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='#ef4444'; x.fillRect(0,0,w,h); x.strokeStyle='#111827'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#111827'; x.font='900 64px Inter'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('FINAL WAVE!', w/2, h/2); const img=new Image(); img.src=c.toDataURL(); return { name, w, h, img, ax:0.5, ay:0.5 } }
+
+// ---------- Packer (shelf) ----------
+function pack(){
+  const maxW = clamp(parseInt(byId('maxW').value)||2048,256,8192);
+  const pad = clamp(parseInt(byId('pad').value)||0,0,64);
+  const files = [...state.files]; files.sort((a,b)=> b.h - a.h); // สูงก่อน
+  let x=pad, y=pad, rowH=0, usedW=0; const placed=[];
+  for(const it of files){
+    if(x + it.w + pad > maxW){ x=pad; y += rowH + pad; rowH = 0; }
+    placed.push({ ...it, x, y });
+    x += it.w + pad; rowH = Math.max(rowH, it.h); usedW = Math.max(usedW, x);
+  }
+  const h = y + rowH + pad; let w = Math.min(maxW, Math.max(usedW, 64));
+  if(byId('pow2').checked){ w = toPow2(w); h = toPow2(h); }
+  state.packed = placed; state.atlasW = w; state.atlasH = h; drawAtlas();
+  byId('packInfo').textContent = `ขนาด Atlas: ${w}×${h} | เฟรม: ${placed.length}`;
+}
+function drawAtlas(){ const c=byId('atlas'); c.width=state.atlasW; c.height=state.atlasH; const g=c.getContext('2d'); g.fillStyle='#0b1220'; g.fillRect(0,0,c.width,c.height); for(const f of state.packed){ g.drawImage(f.img, f.x, f.y); g.strokeStyle='#23324a'; g.strokeRect(f.x+0.5,f.y+0.5,f.w-1,f.h-1); }
+  // build frames json
+  state.frames={}; for(const f of state.packed){ state.frames[f.name] = { x:f.x, y:f.y, w:f.w, h:f.h, pivot:{x:f.ax,y:f.ay} }; }
+}
+
+// ---------- Export ----------
+function downloadURI(uri, name){ const a=document.createElement('a'); a.href=uri; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function exportPNG(){ const c=byId('atlas'); downloadURI(c.toDataURL('image/png'), 'atlas.png'); }
+function exportJSON(){ const data = { frames: state.frames, meta:{ app:'TD Free Asset Builder', scale:1 } }; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); downloadURI(url,'atlas.json'); URL.revokeObjectURL(url); }
+
+// ---------- Snippet ----------
+function setSnippet(){
+  const code = `// ====== Atlas Loader (paste into your game) ======
+const Atlas = { img:new Image(), frames:{}, ready:false };
+async function loadAtlas(png='assets/atlas.png', json='assets/atlas.json'){
+  try{ const map = await fetch(json).then(r=>r.json()); Atlas.frames = map.frames || map; await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = png; }); Atlas.ready=true; }
+  catch(e){ console.warn('Atlas load failed, fallback to placeholders.', e); Atlas.ready=false; }
+}
+function drawFrame(ctx, name, x, y, w, h, rot=0){ const f = Atlas.frames?.[name]; if(!Atlas.ready || !f) return false; ctx.save(); ctx.translate(x,y); if(rot) ctx.rotate(rot); ctx.drawImage(Atlas.img, f.x, f.y, f.w, f.h, -w/2, -h/2, w, h); ctx.restore(); return true; }
+// Example usage in Tower.draw():
+// if(!drawFrame(ctx, 'tower_gun_base', this.x, this.y, size, size)) { /* fallback */ }
+// ======================================================`;
+  byId('snippet').textContent = code;
+}
+
+// ---------- Banner generator ----------
+function addBanner(){ const name='ui_banner_finalwave'; const w=512,h=128; const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='#ef4444'; x.fillRect(0,0,w,h); x.strokeStyle='#111827'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#111827'; x.font='900 64px Inter'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('FINAL WAVE!', w/2, h/2); const img=new Image(); img.src=c.toDataURL(); state.files.push({ name, w, h, img, ax:0.5, ay:0.5 }); renderTable(); updateCount(); alert('เพิ่ม ui_banner_finalwave แล้ว'); }
+
+// ---------- Utils ----------
+function clamp(v,min,max){ v=Number(v); if(Number.isNaN(v)) return min; return Math.max(min, Math.min(max, v)); }
+function toPow2(n){ let p=1; while(p<n) p<<=1; return p; }
+
+// ---------- Events ----------
+byId('btnPack').addEventListener('click', pack);
+byId('btnExportPNG').addEventListener('click', exportPNG);
+byId('btnExportJSON').addEventListener('click', exportJSON);
+byId('btnBanner').addEventListener('click', addBanner);
+setSnippet();
+</script>
+</body>
+</html>
