@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>Idle TD — Atlas Update v1.5</title>
+<title>Idle TD — GM Edition v2.4</title>
 <style>
   :root{
     --bg:#0b1220; --card:#0f172a; --line:#243041; --ink:#e2e8f0; --mut:#a8b3c7;
@@ -21,14 +21,18 @@
   header{position:sticky;top:0;background:#0b1220cc;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);z-index:10}
   .hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 0}
   .pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
-  .btn{cursor:pointer;border:1px solid var(--line);background:linear-gradient(180deg,#1b2636,#131b28);color:var(--ink);padding:8px 12px;border-radius:10px}
-  .btn:hover{border-color:#3b4a63}
-  .btn:disabled{background:#111a2a;color:var(--mut);border-color:var(--line);cursor:not-allowed}
+  .btn{cursor:pointer;border:1px solid var(--line);background:linear-gradient(180deg,#1b2636,#131b28);color:var(--ink);padding:8px 12px;border-radius:10px; transition: all 0.15s ease;}
+  .btn:hover{border-color:#3b4a63; transform: translateY(-1px);}
+  .btn:disabled{background:#111a2a;color:var(--mut);border-color:var(--line);cursor:not-allowed; transform: none;}
   .gridWrap{display:grid;grid-template-columns:1fr;gap:12px}
-  canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;cursor:crosshair}
+  canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;cursor:crosshair; background-color: #000;}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
   .row{display:flex;flex-wrap:wrap;gap:8px}
-  .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .list{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 8px;
+  }
   @media (min-width:1000px){.gridWrap{grid-template-columns:3fr 1fr}}
   .modal{position:fixed;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
   .modal.visible{opacity:1;visibility:visible}
@@ -38,6 +42,73 @@
   .tier h4{margin:0 0 8px}
   .tier p{font-size:12px;color:var(--mut);margin:0 0 8px}
   #loadingOverlay{color:white;font-size:1.5em;text-align:center}
+
+  /* GM Panel Styles */
+  .gm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .gm-entity-card { background: var(--bg); padding: 8px; border-radius: 8px; border: 1px solid var(--line); }
+  .gm-entity-card h4 { margin:0 0 8px; font-size: 1em; display:flex; align-items:center; gap: 8px;}
+  .gm-sprite-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);}
+  .gm-sprite-preview { width: 36px; height: 36px; border: 2px solid var(--line); border-radius: 4px; cursor: pointer; image-rendering: pixelated; background-color: #0005; background-position: center; background-repeat: no-repeat; background-size: contain; transition: all .15s ease; }
+  .gm-sprite-preview:hover { transform: scale(1.1); border-color: var(--mut); }
+  .gm-sprite-preview.selected { border-color: var(--pri); transform: scale(1.1); box-shadow: 0 0 8px var(--pri);}
+  .gm-current-sprite { width: 24px; height: 24px; image-rendering: pixelated; background-color: #0005; border-radius: 4px; }
+
+  /* Build Menu Icon Styles */
+  .build-icon {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    overflow: hidden;
+    user-select: none;
+  }
+  .build-icon:hover {
+    border-color: var(--pri);
+    transform: translateY(-2px);
+  }
+  .build-icon.disabled {
+    filter: grayscale(1) brightness(0.6);
+    cursor: not-allowed;
+    transform: none;
+  }
+  .build-icon.selected {
+      border-color: var(--ok);
+      box-shadow: 0 0 10px var(--ok);
+  }
+  .build-icon-sprite {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    transform: scale(2.5); /* Make the 16x16 sprite bigger */
+  }
+  .build-icon-cost {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--yel);
+    text-shadow: 1px 1px 1px #000;
+  }
+  .build-icon.disabled .build-icon-cost {
+      color: var(--mut);
+  }
+
+  /* Upgrade Panel */
+  .upgrade-stats { font-size: 12px; line-height: 1.6; }
+  .upgrade-stats .arrow { color: var(--pri); }
+  .upgrade-stats .increase { color: var(--ok); }
+  .upgrade-stats .decrease { color: var(--bad); }
+
+
 </style>
 </head>
 <body>
@@ -56,6 +127,7 @@
       <button class="btn" id="btnStart">▶ Start Wave</button>
       <button class="btn" id="btnCitadel">🏛️ อัปเกรดฐานทัพ</button>
       <button class="btn" id="btnSpeed">⏩ Speed x1</button>
+      <button class="btn" id="btnGM">🧑‍⚖️ GM Mode</button>
     </div>
   </div>
 </header>
@@ -83,6 +155,25 @@
   </div>
 </div>
 
+<!-- GM Panel Modal -->
+<div id="gmModal" class="modal">
+  <div class="modal-content" style="max-width: 90vw; width: 1200px;">
+    <div class="modal-header">
+      <h2>🧑‍⚖️ GM Panel</h2>
+      <button id="closeGmModal" class="btn">×</button>
+    </div>
+    <h3>🎨 Map Theme</h3>
+    <div id="gmThemeSelector" class="row"></div>
+    <hr style="border-color: var(--line); margin: 12px 0;">
+    <h3>👾 Enemy Appearance</h3>
+    <div id="gmEnemySelector" class="gm-grid"></div>
+    <hr style="border-color: var(--line); margin: 12px 0;">
+    <h3>🗼 Tower Appearance</h3>
+    <div id="gmTowerSelector" class="gm-grid"></div>
+  </div>
+</div>
+
+
 <div id="worldOverlay" class="modal visible">
   <div id="loadingOverlay" style="display:none;"><p>กำลังโหลดทรัพยากร...</p></div>
   <div id="selectionContent" class="modal-content" style="max-width:960px">
@@ -103,10 +194,44 @@
 (async function(){
 
 // ===== Atlas Loader (Global) =====
+const ATLAS_IMAGE_BASE64 = 'data:image/png;base64,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';
+
+const ATLAS_JSON_DATA = {
+    "frames": {
+        "enemy_bat_0": { "x": 0, "y": 0, "w": 16, "h": 16 },
+        "enemy_bat_1": { "x": 16, "y": 0, "w": 16, "h": 16 },
+        "enemy_ghost_0": { "x": 32, "y": 0, "w": 16, "h": 16 },
+        "enemy_ghost_1": { "x": 48, "y": 0, "w": 16, "h": 16 },
+        "enemy_golem_0": { "x": 0, "y": 16, "w": 16, "h": 16 },
+        "enemy_golem_1": { "x": 16, "y": 16, "w": 16, "h": 16 },
+        "enemy_slime_0": { "x": 32, "y": 16, "w": 16, "h": 16 },
+        "enemy_slime_1": { "x": 48, "y": 16, "w": 16, "h": 16 },
+        "enemy_boss_0": { "x": 64, "y": 0, "w": 16, "h": 32 },
+
+        "tower_cannon_base": { "x": 0, "y": 32, "w": 16, "h": 16 },
+        "tower_cannon_turret": { "x": 0, "y": 48, "w": 16, "h": 16 },
+        "tower_crystal_base": { "x": 16, "y": 32, "w": 16, "h": 16 },
+        "tower_crystal_turret": { "x": 16, "y": 48, "w": 16, "h": 16 },
+        "tower_dual_base": { "x": 32, "y": 32, "w": 16, "h": 16 },
+        "tower_dual_turret": { "x": 32, "y": 48, "w": 16, "h": 16 },
+        "tower_spike_base": { "x": 48, "y": 32, "w": 16, "h": 16 },
+        "tower_spike_turret": { "x": 48, "y": 48, "w": 16, "h": 16 },
+        
+        "building_mine": { "x": 64, "y": 48, "w": 16, "h": 16 },
+        "building_barracks": { "x": 64, "y": 32, "w": 16, "h": 16 },
+
+        "vfx_explosion_0": { "x": 0, "y": 64, "w": 16, "h": 16 },
+        "vfx_explosion_1": { "x": 16, "y": 64, "w": 16, "h": 16 },
+        "vfx_explosion_2": { "x": 32, "y": 64, "w": 16, "h": 16 },
+        "vfx_explosion_3": { "x": 48, "y": 64, "w": 16, "h": 16 }
+    }
+};
+
 const Atlas = { img:new Image(), frames:{}, ready:false };
+
 function normalizeFrames(map){
-  if (map.frames && !Array.isArray(map.frames)) return map.frames;       // {frames:{name:{x,y,w,h}}}
-  if (Array.isArray(map.frames)) {                                       // [{filename, frame:{x,y,w,h}}]
+  if (map.frames && !Array.isArray(map.frames)) return map.frames;
+  if (Array.isArray(map.frames)) {
     const out={};
     for(const f of map.frames){
       const n=(f.filename||'').replace(/\.(png|jpe?g)$/i,'');
@@ -116,69 +241,115 @@ function normalizeFrames(map){
   }
   return {};
 }
-async function loadAtlas(png='assets/atlas.png', json='assets/atlas.json'){
+
+async function loadAtlas(){
   try{
-    const map = await fetch(json).then(r=>r.json());
-    Atlas.frames = (map.frames && !Array.isArray(map.frames)) ? map.frames
-                 : Array.isArray(map.frames)
-                 ? Object.fromEntries(map.frames.map(f=>[(f.filename||'').replace(/\.(png|jpe?g)$/i,''), f.frame||f]))
-                 : map;
-    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = png; });
+    const map = ATLAS_JSON_DATA;
+    Atlas.frames = normalizeFrames(map);
+    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = ATLAS_IMAGE_BASE64; });
     Atlas.ready = true;
-    autoAliasFramesV2();                // ← สำคัญ
-    console.log('[Atlas] ready', Object.keys(Atlas.frames).length);
+    console.log('[Atlas] ready (GM Edition)', Object.keys(Atlas.frames).length);
   }catch(e){ console.warn('[Atlas] load failed', e); Atlas.ready=false; }
 }
+
 function drawFrame(ctx, name, x, y, w, h, rot=0){
-  const f = Atlas.frames?.[name]; if(!Atlas.ready || !f) return false;
+  const f = Atlas.frames?.[name];
+  if(!Atlas.ready || !f || !Atlas.img.complete || Atlas.img.naturalHeight === 0) return false;
+  
   ctx.save(); ctx.translate(x,y); if(rot) ctx.rotate(rot);
+  ctx.imageSmoothingEnabled = false;
   ctx.drawImage(Atlas.img, f.x,f.y,f.w,f.h, -w/2,-h/2, w,h);
   ctx.restore(); return true;
 }
-window.Atlas=Atlas; window.drawFrame=drawFrame; // ให้เช็คใน Console ได้
-// === Patterns & Ground ===
-function getPattern(ctx, frameName, scale=1){
-  getPattern.cache ??= {};
-  const key = frameName+'@'+scale;
-  if(getPattern.cache[key]) return getPattern.cache[key];
-  const f = Atlas.frames?.[frameName]; if(!f) return null;
-  const off = document.createElement('canvas');
-  off.width = Math.max(2, Math.floor(f.w*scale));
-  off.height= Math.max(2, Math.floor(f.h*scale));
-  const oc = off.getContext('2d');
-  oc.imageSmoothingEnabled = false;
-  oc.drawImage(Atlas.img, f.x,f.y,f.w,f.h, 0,0, off.width, off.height);
-  const pat = ctx.createPattern(off, 'repeat');
-  return (getPattern.cache[key] = pat);
-}
+window.Atlas=Atlas; window.drawFrame=drawFrame;
 
-// กำหนดชื่อเฟรมจาก atlas ที่จะใช้เป็นพื้น/ทาง (ปรับชื่อให้ตรงกับ atlas คุณได้)
-const THEME = {
-  grassFrame: 'landscape_05',  // พื้นหญ้า
-  pathFrame : 'landscape_22',  // ทางดิน/ทราย
+// ===== Sound Engine =====
+const Sound = {
+    audioCtx: null,
+    init() {
+        if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+    play(type, options = {}) {
+        if (!this.audioCtx || this.audioCtx.state !== 'running') return;
+
+        const now = this.audioCtx.currentTime;
+        const gainNode = this.audioCtx.createGain();
+        gainNode.connect(this.audioCtx.destination);
+        
+        if (type === 'shoot') {
+            const osc = this.audioCtx.createOscillator();
+            osc.connect(gainNode);
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + options.duration);
+            osc.type = options.waveType;
+            osc.frequency.setValueAtTime(options.freq, now);
+            osc.start(now);
+            osc.stop(now + options.duration);
+        } else if (type === 'hit') {
+            const osc = this.audioCtx.createOscillator();
+            osc.connect(gainNode);
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(100, now);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'explode') {
+             const bufferSize = this.audioCtx.sampleRate * 0.5;
+             const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+             const data = buffer.getChannelData(0);
+             for (let i = 0; i < bufferSize; i++) {
+                 data[i] = Math.random() * 2 - 1;
+             }
+             const noise = this.audioCtx.createBufferSource();
+             noise.buffer = buffer;
+             
+             const filter = this.audioCtx.createBiquadFilter();
+             filter.type = 'lowpass';
+             filter.frequency.setValueAtTime(1200, now);
+             filter.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+
+             noise.connect(filter);
+             filter.connect(gainNode);
+
+             gainNode.gain.setValueAtTime(0.4, now);
+             gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+             
+             noise.start(now);
+             noise.stop(now + 0.4);
+        }
+    },
+    playShoot(towerKey) {
+        const sounds = {
+            GUN: { freq: 800, duration: 0.1, waveType: 'square' },
+            FROST: { freq: 600, duration: 0.2, waveType: 'sine' },
+            ROCKET: { freq: 200, duration: 0.15, waveType: 'sawtooth' },
+            ARTILLERY: { freq: 150, duration: 0.2, waveType: 'triangle' }
+        };
+        if (sounds[towerKey]) {
+            this.play('shoot', sounds[towerKey]);
+        }
+    }
 };
 
+
+// === Patterns & Ground ===
 function drawGround(ctx){
-  // ถ้าไม่มีเฟรม ใช้สี fallback
-  const pat = getPattern(ctx, THEME.grassFrame, 0.5);
-  if(pat){ ctx.fillStyle = pat; ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height); }
-  else{
     const root = getComputedStyle(document.documentElement);
     const biomeBg = root.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
     ctx.fillStyle = biomeBg || '#134e4a';
     ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height);
-  }
 }
 
 function drawPath(ctx){
-  // สร้างทางแบบ 2 ชั้น (ขอบเข้ม + ไส้ทางสว่าง)
   const ts = TS();
-  const wOuter = ts.w * 1.20;   // ความกว้างขอบนอก
-  const wInner = ts.w * 0.90;   // ความกว้างไส้ทาง
+  const wOuter = ts.w * 1.20;
+  const wInner = ts.w * 0.90;
   const root = getComputedStyle(document.documentElement);
   const pathFallback = root.getPropertyValue(`--path-${state.biome.toLowerCase()}`).trim() || '#a16207';
 
-  // ขอบทาง (เงา)
   ctx.save();
   ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
@@ -186,149 +357,72 @@ function drawPath(ctx){
   ctx.beginPath(); for(const p of state.path) ctx.lineTo(p.x, p.y); ctx.stroke();
   ctx.restore();
 
-  // ไส้ทางด้วย pattern (ถ้าไม่มี ใช้สี fallback)
   ctx.save();
   ctx.lineCap='round'; ctx.lineJoin='round';
-  const pat = getPattern(ctx, THEME.pathFrame, 0.6);
-  ctx.strokeStyle = pat || pathFallback;
+  ctx.strokeStyle = pathFallback;
   ctx.lineWidth = wInner;
   ctx.beginPath(); for(const p of state.path) ctx.lineTo(p.x, p.y); ctx.stroke();
   ctx.restore();
-
-  // จุด gravel เล็กๆ เพิ่มความมีชีวิต
-  ctx.save();
-  ctx.globalAlpha = .25;
-  for (let i=0; i<80; i++){
-    const idx = Math.floor(Math.random()*(state.path.length-1));
-    const a = state.path[idx], b = state.path[idx+1];
-    if(!b) continue;
-    const t = Math.random(); const x = a.x + (b.x-a.x)*t, y = a.y + (b.y-a.y)*t;
-    const dx = (Math.random()-.5)*wInner*0.9, dy = (Math.random()-.5)*wInner*0.9;
-    ctx.fillStyle = '#3f2d20'; ctx.beginPath(); ctx.arc(x+dx, y+dy, Math.random()*2+0.5, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.restore();
 }
 
-function autoAliasFramesV2(){
-  const F = Atlas.frames; if(!F) return;
-  const keys = Object.keys(F);
-  const groups = {};
-  for(const k of keys){
-    const m = k.match(/^([a-z0-9]+?)(?:[_\-](\d+))?$/i);
-    if(!m) continue;
-    const stem = m[1].toLowerCase();
-    const idx  = m[2] ? parseInt(m[2],10) : Number.POSITIVE_INFINITY;
-    const fr = F[k]; const area = (fr.w||0)*(fr.h||0);
-    (groups[stem] ||= []).push({ key:k, idx, area });
-  }
-  for(const arr of Object.values(groups)){
-    arr.sort((a,b)=> (a.idx - b.idx) || (b.area - a.area));
-  }
-
-  const pickStem = (prio, used=new Set())=>{
-    for(const s of prio) if(groups[s] && !used.has(s)) return s;
-    const bad = new Set(['tower','trees','tree','rocks','rock','landscape','bg','background','hud','ui']);
-    let best=null, score=-1;
-    for(const [s,arr] of Object.entries(groups)){
-      if(used.has(s) || bad.has(s)) continue;
-      const sc = arr.length*100000 + (arr[0]?.area||0);
-      if(sc>score){ score=sc; best=s; }
-    }
-    if(best) return best;
-    if(groups['crystals'] && !used.has('crystals')) return 'crystals';
-    for(const [s,arr] of Object.entries(groups)){
-      if(used.has(s)) continue;
-      const sc = arr.length*100000 + (arr[0]?.area||0);
-      if(sc>score){ score=sc; best=s; }
-    }
-    return best;
-  };
-
-  const used = new Set();
-  const enemyPlan = [
-    { type:'runner', prio:['crystals','crystal','slime','goblin','orc'] },
-    { type:'brute',  prio:['rocks','rock','golem','brute'] },
-    { type:'flyer',  prio:['bat','fly','bird','harpy','flyer'] },
-    { type:'boss',   prio:['boss','dragon','demon','crystals'] },
-  ];
-
-  for(const e of enemyPlan){
-    const s = pickStem(e.prio, used); if(!s) continue;
-    used.add(s);
-    const arr = groups[s];
-    for(let i=0;i<6;i++){
-      const src = arr[i % arr.length].key;
-      F[`enemy_${e.type}_${i}`] = F[src];
-    }
-    console.log('[alias] enemy', e.type, '←', s, `(${arr.length} frames)`);
-  }
-
-  const tarr = (groups['tower']||[]).slice().sort((a,b)=> (b.area - a.area) || (a.idx - b.idx));
-  const types = ['gun','frost','rocket','artillery'];
-  for(let i=0;i<types.length;i++){
-    const base   = tarr.shift()?.key;
-    const turret = tarr.shift()?.key;
-    if(base)   F[`tower_${types[i]}_base`]   = F[base];
-    if(turret) F[`tower_${types[i]}_turret`] = F[turret];
-    console.log('[alias] tower', types[i], '←', base, '/', turret);
-  }
-
-  const rocks = groups['rocks'] || groups['rock'];
-  if(rocks?.length) F['mine'] = F[rocks[0].key];
-
-  if(!F['bullet']) console.log('[alias] bullet: none (use code fallback)');
-}
 // ===== GAME CONFIG =====
 const CONFIG = {
   GRID:{ COLS:24, ROWS:14 },
   CITADEL_TIERS:{
     1:{ hp:100, unlocks:['GUN','MINE'] },
-    2:{ hp:150, cost:{gold:100,components:50}, unlocks:['FROST','ROCKET'] },
-    3:{ hp:220, cost:{gold:1200,gears:25}, unlocks:['ARTILLERY','BARRACKS'] },
-    4:{ hp:350, cost:{gold:3000,cores:5}, unlocks:['METEOR_STRIKE'] }
+    2:{ hp:150, cost:{gold:100, components:5}, unlocks:['FROST','ROCKET'] },
+    3:{ hp:220, cost:{gold:1200, components:20, gears:10}, unlocks:['ARTILLERY','BARRACKS'] },
+    4:{ hp:350, cost:{gold:3000, gears:20, cores:5}, unlocks:['METEOR_STRIKE'] }
   },
   TOWER_TYPES:{
-  GUN:{
-    name:'ป้อมปืนกล', tier:1,
-    cost:{ gold:30, ore:0 },
-    stats:{ dmg:35, range:2.3, rate:5.9, projectileSpeed:450 },
-    upgrades:{
-      dmg:   { label:'+DMG',   cost:{ ore:10 }, mul:1.20 },
-      range: { label:'+RANGE', cost:{ ore:15 }, mul:1.10 },
-      rate:  { label:'+RATE',  cost:{ ore:12 }, mul:1.12 }
+    GUN:{
+        name:'ป้อมปืนกล', tier:1,
+        cost:{ gold:30, ore:0 },
+        stats:{ dmg:35, range:2.3, rate:5.9, projectileSpeed:450 },
+        maxLevel: 10,
+        levelUp: {
+            cost: { gold: 20 },
+            costMultiplier: 1.4,
+            statMultipliers: { dmg: 1.22, range: 1.04, rate: 1.02 }
+        }
+    },
+    FROST:{
+        name:'ป้อมน้ำแข็ง', tier:2,
+        cost:{ gold:80, ore:10 },
+        stats:{ dmg:45, range:2.1, rate:1.2, slow:0.35, projectileSpeed:350 },
+        maxLevel: 10,
+        levelUp: {
+            cost: { gold: 50, ore: 5 },
+            costMultiplier: 1.5,
+            statMultipliers: { dmg: 1.25, range: 1.05, slow: 1.08 }
+        }
+    },
+    ROCKET:{
+        name:'ป้อมจรวด', tier:2,
+        cost:{ gold:120, ore:30 },
+        stats:{ dmg:40, range:2.8, rate:0.4, splash:1.0, projectileSpeed:300 },
+        maxLevel: 10,
+        levelUp: {
+            // นี่คือตัวอย่างการเพิ่มเงื่อนไขการอัปเกรด
+            // คุณสามารถเพิ่ม 'gears: X' หรือ 'cores: Y' เข้าไปได้เลย
+            // ระบบจะตรวจสอบและหักทรัพยากรตามที่คุณกำหนดโดยอัตโนมัติ
+            cost: { gold: 80, ore: 15, components: 1 },
+            costMultiplier: 1.5,
+            statMultipliers: { dmg: 1.2, range: 1.03, splash: 1.1 }
+        }
+    },
+    ARTILLERY:{
+        name:'ป้อมปืนใหญ่', tier:3,
+        cost:{ gold:200, ore:50 },
+        stats:{ dmg:80, range:4.5, rate:0.25, splash:1.5, projectileSpeed:200 },
+        maxLevel: 10,
+        levelUp: {
+            cost: { gold: 150, ore: 30 },
+            costMultiplier: 1.6,
+            statMultipliers: { dmg: 1.25, range: 1.05, splash: 1.15 }
+        }
     }
   },
-  FROST:{
-    name:'ป้อมน้ำแข็ง', tier:2,
-    cost:{ gold:80, ore:10 },
-    stats:{ dmg:45, range:2.1, rate:1.2, slow:0.35, projectileSpeed:350 },
-    upgrades:{
-      dmg:   { label:'+DMG',   cost:{ ore:15 }, mul:1.30 },
-      range: { label:'+RANGE', cost:{ ore:15 }, mul:1.10 },
-      slow:  { label:'+SLOW',  cost:{ ore:20 }, mul:1.15 }
-    }
-  },
-  ROCKET:{
-    name:'ป้อมจรวด', tier:2,
-    cost:{ gold:120, ore:30 },
-    stats:{ dmg:40, range:2.8, rate:0.4, splash:1.0, projectileSpeed:300 },
-    upgrades:{
-      dmg:    { label:'+DMG',    cost:{ ore:40 }, mul:1.25 },
-      range:  { label:'+RANGE',  cost:{ ore:30 }, mul:1.08 },
-      splash: { label:'+SPLASH', cost:{ ore:50 }, mul:1.20 }
-    }
-  },
-  ARTILLERY:{
-    name:'ป้อมปืนใหญ่', tier:3,
-    cost:{ gold:200, ore:50 },
-    stats:{ dmg:80, range:4.5, rate:0.25, splash:1.5, minRange:1.8, projectileSpeed:200 },
-    upgrades:{
-      dmg:    { label:'+DMG',    cost:{ ore:80 },  mul:1.20 },
-      range:  { label:'+RANGE',  cost:{ ore:60 },  mul:1.10 },
-      splash: { label:'+SPLASH', cost:{ ore:100 }, mul:1.15 }
-    }
-  }
-},
   BUILDING_TYPES:{
     MINE:{ name:'เหมืองแร่', tier:1, cost:{gold:40,ore:0}, stats:{ rate:5, yield:2 } },
     BARRACKS:{ name:'ค่ายทหาร', tier:3, cost:{gold:150,ore:20}, limit:1 }
@@ -358,11 +452,23 @@ const CONFIG = {
 
 const state = {
   mode:'map-select', citadelTier:1, citadelHP:100,
-  gold:200, ore:50, components:0, gears:0, cores:0,
+  gold:200, ore:50, components:5, gears:0, cores:0,
   wave:0, speed:1,
   towers:[], buildings:[], enemies:[], bullets:[], effects:[], path:[], pathGrid:new Set(),
   lastTime:0, buildMode:null, selectedEntity:null,
-  biome:'GRASSLAND', mouse:{x:0,y:0}, decorations:[]
+  biome:'GRASSLAND', mouse:{x:0,y:0}, decorations:[],
+  spriteMap: { // GM Sprite Selections
+    RUNNER: 'enemy_slime',
+    BRUTE: 'enemy_golem',
+    FLYER: 'enemy_bat',
+    BOSS: 'enemy_boss',
+    GUN: 'tower_cannon',
+    FROST: 'tower_crystal',
+    ROCKET: 'tower_dual',
+    ARTILLERY: 'tower_spike',
+    MINE: 'building_mine',
+    BARRACKS: 'building_barracks'
+  }
 };
 
 const game = document.getElementById('game');
@@ -375,7 +481,7 @@ class Entity{ constructor(c,r){ this.c=c; this.r=r; const {x,y}=tileCenter(c,r);
 class Tower extends Entity{
   constructor(c,r,key){ super(c,r); this.key=key; this.type='tower';
     this.def=CONFIG.TOWER_TYPES[key]; this.stats=JSON.parse(JSON.stringify(this.def.stats));
-    this.cooldown=0; this.target=null; this.angle=0; this.level=1; this.invested=this.def.cost;
+    this.cooldown=0; this.target=null; this.angle=0; this.level=1;
   }
   update(dt){
     this.cooldown -= dt;
@@ -396,25 +502,31 @@ class Tower extends Entity{
     const rateMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.towerRate || 1;
     this.cooldown = 1 / (this.stats.rate * rateMod);
     state.bullets.push(new Bullet(this.x, this.y, this.target, this));
+    Sound.playShoot(this.key);
   }
   draw(ctx){
-    const size = TS().w * 0.8;
-    const baseName   = `tower_${this.key.toLowerCase()}_base`;
-    const turretName = `tower_${this.key.toLowerCase()}_turret`;
+    const size = TS().w * 1.1;
+    const spriteStem = state.spriteMap[this.key] || `tower_cannon`;
+    const baseName   = `${spriteStem}_base`;
+    const turretName = `${spriteStem}_turret`;
 
     // Base
-    if(!drawFrame(ctx, baseName, this.x, this.y, size, size)){
-      ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(this.x,this.y,15,0,Math.PI*2); ctx.fill();
+    if (!drawFrame(ctx, baseName, this.x, this.y, size, size)) {
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, size * 0.4, 0, Math.PI * 2);
+        ctx.fill();
     }
+    
     // Turret (rotated)
-    ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle + Math.PI/2);
+    ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle);
     ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=8; ctx.shadowOffsetY=4;
-    if(!drawFrame(ctx, turretName, 0, 0, size, size)){
-      ctx.fillStyle = '#22d3ee'; ctx.fillRect(-4,-4,8,20);
+    if (!drawFrame(ctx, turretName, 0, 0, size, size)) {
+        ctx.fillStyle = '#22d3ee';
+        ctx.fillRect(-size / 8, -size / 8, size / 4, size / 2);
     }
     ctx.restore();
 
-    // Range ring when selected
     if(state.selectedEntity===this){
       ctx.save(); ctx.globalAlpha=.2; ctx.fillStyle='#fff'; ctx.beginPath();
       ctx.arc(this.x,this.y,this.stats.range*TS().w,0,Math.PI*2); ctx.fill(); ctx.restore();
@@ -436,10 +548,11 @@ class Building extends Entity{
     }
   }
   draw(ctx){
-    const size = TS().w * 0.9;
-    if(!drawFrame(ctx, this.key.toLowerCase(), this.x, this.y, size, size)){
-      const ts=TS(); ctx.fillStyle='#94a3b8'; ctx.fillRect(this.x-ts.w/2+4, this.y-ts.h/2+4, ts.w-8, ts.h-8);
-      ctx.fillStyle='#facc15'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(this.key==='MINE'?'⛏️':'🏛️', this.x, this.y);
+    const size = TS().w * 1.1;
+    const spriteName = state.spriteMap[this.key] || `building_${this.key.toLowerCase()}`;
+    if(!drawFrame(ctx, spriteName, this.x, this.y, size, size)){
+       const ts=TS(); ctx.fillStyle='#94a3b8'; ctx.fillRect(this.x-ts.w/2+4, this.y-ts.h/2+4, ts.w-8, ts.h-8);
+       ctx.fillStyle='#facc15'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='24px sans-serif'; ctx.fillText(this.key==='MINE'?'⛏️':'🏛️', this.x, this.y);
     }
   }
 }
@@ -467,6 +580,7 @@ class Enemy{
   takeDamage(dmg, splashResistMod=0){
     const finalDmg = dmg * (1 - splashResistMod);
     this.hp -= finalDmg;
+    Sound.play('hit');
     if(this.hp<=0 && this.alive){
       this.alive=false; state.gold += this.def.reward;
       const drop = CONFIG.ENEMY_DROPS[this.def.type];
@@ -474,23 +588,28 @@ class Enemy{
     }
   }
   draw(ctx){
-    const size = this.key==='BOSS'?40:24;
-    const base = `enemy_${this.key.toLowerCase()}`;
-    const fi = Math.floor(this.animT*10)%6;
-    let ok = drawFrame(ctx, `${base}_${fi}`, this.x, this.y, size*2, size*2);
-    if(!ok) ok = drawFrame(ctx, base, this.x, this.y, size*2, size*2);
-    if(!ok){
-      ctx.save(); ctx.translate(this.x,this.y);
-      ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6; ctx.shadowOffsetY=3;
-      if(this.key==='RUNNER'){ ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
-      if(this.key==='BRUTE'){ ctx.fillStyle='#a855f7'; ctx.fillRect(-10,-10,20,20); }
-      if(this.key==='FLYER'){ ctx.fillStyle='#eab308'; ctx.beginPath(); ctx.moveTo(0,-10);ctx.lineTo(10,10);ctx.lineTo(-10,10);ctx.closePath();ctx.fill(); }
-      if(this.key==='BOSS'){ ctx.fillStyle='#dc2626'; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill(); }
-      ctx.restore();
+    const size = this.key==='BOSS'? TS().w * 1.5 : TS().w;
+    const spriteStem = state.spriteMap[this.key] || `enemy_slime`;
+    
+    const fi = Math.floor(this.animT * 5) % 2; // Simple 2-frame animation
+    const frameName = `${spriteStem}_${fi}`;
+    
+    let ok = drawFrame(ctx, frameName, this.x, this.y, size, size);
+    if (!ok) {
+        ok = drawFrame(ctx, spriteStem + '_0', this.x, this.y, size, size); // Fallback to frame 0
+    }
+    if(!ok) {
+        ctx.save(); ctx.translate(this.x,this.y);
+        ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6; ctx.shadowOffsetY=3;
+        if(this.key==='RUNNER'){ ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); }
+        if(this.key==='BRUTE'){ ctx.fillStyle='#a855f7'; ctx.fillRect(-10,-10,20,20); }
+        if(this.key==='FLYER'){ ctx.fillStyle='#eab308'; ctx.beginPath(); ctx.moveTo(0,-10);ctx.lineTo(10,10);ctx.lineTo(-10,10);ctx.closePath();ctx.fill(); }
+        if(this.key==='BOSS'){ ctx.fillStyle='#dc2626'; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill(); }
+        ctx.restore();
     }
 
-    if(this.slowTimer>0){ ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2; ctx.globalAlpha=.7; ctx.beginPath(); ctx.arc(this.x,this.y,size,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=1; }
-    const barY=this.y-size-5; ctx.fillStyle='#1e293b'; ctx.fillRect(this.x-15,barY,30,4); ctx.fillStyle='#16a34a'; ctx.fillRect(this.x-15,barY,30*(this.hp/this.maxHp),4);
+    if(this.slowTimer>0){ ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2; ctx.globalAlpha=.7; ctx.beginPath(); ctx.arc(this.x,this.y,size/2.5,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=1; }
+    const barY=this.y-size/2-5; ctx.fillStyle='#1e293b'; ctx.fillRect(this.x-15,barY,30,4); ctx.fillStyle='#16a34a'; ctx.fillRect(this.x-15,barY,30*(this.hp/this.maxHp),4);
   }
 }
 
@@ -507,6 +626,7 @@ class Bullet{
     const splashMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.splashDmg || 1;
     const splashRes = CONFIG.BIOME_MODIFIERS[state.biome].mods.enemySplashResist || 0;
     if(this.tower.stats.splash>0){
+      Sound.play('explode');
       state.effects.push(new Explosion(this.target.x,this.target.y,this.tower.stats.splash*TS().w));
       state.enemies.forEach(e=>{ if(dist(this.target.x,this.target.y,e.x,e.y) < this.tower.stats.splash*TS().w){ e.takeDamage(this.tower.stats.dmg*splashMod, splashRes); } });
     }else{
@@ -515,7 +635,6 @@ class Bullet{
     if(this.tower.stats.slow>0){ const slowMod = CONFIG.BIOME_MODIFIERS[state.biome].mods.frostSlow || 1; this.target.slowFactor = 1 - (this.tower.stats.slow*slowMod); this.target.slowTimer = 2; }
   }
   draw(ctx){
-    // ไม่ใช้เฟรมกระสุนก็ได้ ใช้วงกลมง่าย ๆ
     if(this.tower.key==='GUN') ctx.fillStyle='#67e8f9';
     else if(this.tower.key==='FROST') ctx.fillStyle='#7dd3fc';
     else if(this.tower.key==='ROCKET') ctx.fillStyle='#fb923c';
@@ -529,9 +648,8 @@ class Explosion extends Effect{
   constructor(x,y,radius){ super(x,y); this.radius=radius; this.life=0.4; }
   draw(ctx){
     const p = 1 - (this.life/0.4);
-    // ใช้เฟรม vfx ถ้ามี
-    const fi = Math.min(5, Math.floor(p*6));
-    if(!drawFrame(ctx, `vfx_explosion_${fi}`, this.x, this.y, this.radius, this.radius)){
+    const fi = Math.min(3, Math.floor(p*4));
+    if(!drawFrame(ctx, `vfx_explosion_${fi}`, this.x, this.y, this.radius*2, this.radius*2)){
       ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * p, 0, Math.PI*2);
       ctx.fillStyle = `rgba(251,146,60,${1-p})`; ctx.fill();
     }
@@ -548,12 +666,13 @@ function initGame(){
   resize(); window.addEventListener('resize',resize);
   game.addEventListener('mousemove', e=>{ const r=game.getBoundingClientRect(); state.mouse.x=e.clientX-r.left; state.mouse.y=e.clientY-r.top; });
   game.addEventListener('click', handleCanvasClick);
-  window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(state.buildMode){ state.buildMode=null; toast('ยกเลิกการสร้าง'); } else if(state.selectedEntity){ state.selectedEntity=null; updateSelectedInfo(); toast('ยกเลิกการเลือก'); } }});
-  buildPath(); updateCitadelUI(); updateBuildMenu(); updateHUD();
+  window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(state.buildMode){ state.buildMode=null; toast('ยกเลิกการสร้าง'); updateBuildMenu(); } else if(state.selectedEntity){ state.selectedEntity=null; updateSelectedInfo(); toast('ยกเลิกการเลือก'); } }});
+  buildPath(); updateCitadelUI(); updateBuildMenu();
   state.citadelHP = CONFIG.CITADEL_TIERS[state.citadelTier].hp;
+  updateHUD();
   generateDecorations(); loop(0);
 }
-function generateDecorations(){ for(let i=0;i<50;i++){ const c=Math.floor(Math.random()*CONFIG.GRID.COLS), r=Math.floor(Math.random()*CONFIG.GRID.ROWS); if(!state.pathGrid.has(`${c},${r}`)) state.decorations.push({c,r}); } }
+function generateDecorations(){ /* Decorations disabled for clarity */ state.decorations = []; }
 function startWave(){
   if(state.enemies.length>0) return toast("กำจัดศัตรูให้หมดก่อน");
   state.wave++;
@@ -566,7 +685,6 @@ function handleCanvasClick(){
   if(c<0||r<0||c>=CONFIG.GRID.COLS||r>=CONFIG.GRID.ROWS) return;
 
   if(state.buildMode){
-    // กันก่อนกดสร้าง
     if (isTooCloseToPath(c,r)) return toast('ใกล้ทางเดินเกินไป');
     placeEntity(c,r);
   } else {
@@ -577,7 +695,7 @@ function handleCanvasClick(){
 }
 function placeEntity(c,r){
   if(state.pathGrid.has(`${c},${r}`)) return toast("ไม่สามารถสร้างบนทางเดินได้");
-  if(isTooCloseToPath(c,r))           return toast('ใกล้ทางเดินเกินไป');
+  if(isTooCloseToPath(c,r))             return toast('ใกล้ทางเดินเกินไป');
   if([...state.towers,...state.buildings].some(e=>e.c===c && e.r===r)) return toast("มีสิ่งก่อสร้างอยู่แล้ว");
 
   const key=state.buildMode, isTower=!!CONFIG.TOWER_TYPES[key];
@@ -586,7 +704,9 @@ function placeEntity(c,r){
   if(state.gold>=def.cost.gold && state.ore>=(def.cost.ore||0)){
     state.gold-=def.cost.gold; state.ore-=(def.cost.ore||0);
     if(isTower) state.towers.push(new Tower(c,r,key)); else state.buildings.push(new Building(c,r,key));
-    state.buildMode=null; updateHUD();
+    state.buildMode=null; 
+    updateHUD();
+    updateBuildMenu();
   }else toast('ทรัพยากรไม่พอ');
 }
 function loop(ts){ if(!state.lastTime) state.lastTime=ts; const dt=Math.min(0.05,(ts-state.lastTime)/1000); state.lastTime=ts; const u=dt*state.speed; update(u); draw(); requestAnimationFrame(loop); }
@@ -596,28 +716,16 @@ function update(dt){ if(state.mode!=='play') return; state.towers.forEach(t=>t.u
   state.effects=state.effects.filter(e=>e.alive); state.effects.forEach(e=>e.update(dt)); updateHUD();
 }
 function draw(){
-  drawGround(g);          // พื้นหญ้าแบบ texture
-  drawPath(g);            // ทางเดิน 2 ชั้น + เงา
+  g.clearRect(0,0,game.width, game.height);
+  drawGround(g);
+  drawPath(g);
 
-  const ts = TS();
-
-  // ตกแต่ง (เดิม)
-  g.fillStyle = 'rgba(20,83,45,.45)';
-  state.decorations.forEach(d=>{
-    const {x,y} = tileCenter(d.c,d.r);
-    g.beginPath();
-    g.arc(x,y, Math.random()*6 + 6, 0, Math.PI*2);
-    g.fill();
-  });
-
-  // Entities
   state.buildings.forEach(e=>e.draw(g));
   state.towers.forEach(e=>e.draw(g));
   state.enemies.forEach(e=>e.draw(g));
   state.bullets.forEach(e=>e.draw(g));
   state.effects.forEach(e=>e.draw(g));
 
-  // Overlay ช่องวางป้อม (ดูข้อ 2)
   drawBuildOverlay(g);
 }
 
@@ -633,70 +741,143 @@ function updateHUD(){ const tier=CONFIG.CITADEL_TIERS[state.citadelTier];
   document.getElementById('wave').textContent=state.wave;
 }
 function updateBuildMenu(){
-  buildMenu.innerHTML=''; document.getElementById('buildTier').textContent=state.citadelTier;
-  const available=[...Object.entries(CONFIG.TOWER_TYPES), ...Object.entries(CONFIG.BUILDING_TYPES)].filter(([k,d])=>d.tier<=state.citadelTier);
-  for(const [key,data] of available){
-    const btn=document.createElement('button'); btn.className='btn'; btn.textContent=`${data.name} (${data.cost.gold}G)`;
-    btn.onclick=()=>{ if(state.buildMode===key){ state.buildMode=null; toast('ยกเลิกการสร้าง'); } else { state.buildMode=key; state.selectedEntity=null; updateSelectedInfo(); } };
-    buildMenu.appendChild(btn);
-  }
+    buildMenu.innerHTML = '';
+    document.getElementById('buildTier').textContent = state.citadelTier;
+
+    const allBuildings = { ...CONFIG.TOWER_TYPES, ...CONFIG.BUILDING_TYPES };
+
+    for (const [key, data] of Object.entries(allBuildings)) {
+        const isUnlocked = data.tier <= state.citadelTier;
+
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'build-icon';
+        if (!isUnlocked) {
+            iconContainer.classList.add('disabled');
+        }
+        iconContainer.title = `${data.name}\nCost: ${data.cost.gold} Gold\nRequires Tier: ${data.tier}`;
+
+        const spriteDiv = document.createElement('div');
+        spriteDiv.className = 'build-icon-sprite';
+        const spriteKey = state.spriteMap[key];
+        const frameName = CONFIG.TOWER_TYPES[key] ? `${spriteKey}_base` : spriteKey;
+        const f = Atlas.frames[frameName];
+        if (f && Atlas.img.complete && Atlas.img.naturalHeight !== 0) {
+            spriteDiv.style.backgroundImage = `url(${Atlas.img.src})`;
+            spriteDiv.style.backgroundPosition = `-${f.x}px -${f.y}px`;
+        }
+        iconContainer.appendChild(spriteDiv);
+        
+        const costDiv = document.createElement('div');
+        costDiv.className = 'build-icon-cost';
+        costDiv.textContent = data.cost.gold;
+        iconContainer.appendChild(costDiv);
+
+        iconContainer.onclick = () => {
+            if (isUnlocked) {
+                if (state.buildMode === key) {
+                    state.buildMode = null;
+                    toast('ยกเลิกการสร้าง');
+                } else {
+                    state.buildMode = key;
+                    state.selectedEntity = null;
+                    updateSelectedInfo();
+                }
+                updateBuildMenu(); 
+            } else {
+                toast(`ต้องอัปเกรดฐานทัพเป็น Tier ${data.tier} ก่อน`);
+            }
+        };
+        
+        if (state.buildMode === key) {
+            iconContainer.classList.add('selected');
+        }
+
+        buildMenu.appendChild(iconContainer);
+    }
 }
 function updateSelectedInfo(){
-  const box = document.getElementById('selectedInfo');
-  const t = state.selectedEntity;
-  if(!t || t.type!=='tower'){ box.innerHTML = `<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`; return; }
+    const box = document.getElementById('selectedInfo');
+    const t = state.selectedEntity;
+    if(!t || t.type!=='tower'){ box.innerHTML = `<small style="color:var(--mut)">คลิกที่ป้อมเพื่อดูรายละเอียดและอัปเกรด</small>`; return; }
 
-  const st = t.stats, up = t.def.upgrades || {};
-  const lines = [
-    `<b>${t.def.name}</b> — Lv.${t.level}`,
-    `DMG: ${Math.round(st.dmg)} | RNG: ${st.range.toFixed(2)} | RATE: ${st.rate?.toFixed(2) || '-'}` +
-    (st.slow? ` | SLOW: ${(st.slow*100).toFixed(0)}%` : '') +
-    (st.splash? ` | SPLASH: ${st.splash.toFixed(2)}` : '')
-  ];
+    const def = t.def;
+    const levelUpDef = def.levelUp;
+    const isMaxLevel = t.level >= def.maxLevel;
 
-  let btns = '';
-  for(const [k,def] of Object.entries(up)){
-    const costText = Object.entries(def.cost).map(([r,v])=>`${v} ${r}`).join(', ');
-    btns += `<button class="btn" data-up="${k}" style="width:calc(50% - 4px)">${def.label} (${costText})</button>`;
-  }
+    let statsHtml = `<b>${def.name}</b><br>Level: ${t.level} / ${def.maxLevel}<br><div class="upgrade-stats">`;
 
-  box.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div>${lines.join('<br/>')}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">${btns || '<small>ไม่มีอัปเกรด</small>'}</div>
-    </div>
-  `;
+    // Calculate and format current stats
+    const formatStat = (val, key) => {
+        if (key === 'slow') return `${(val * 100).toFixed(0)}%`;
+        if (key === 'rate') return val.toFixed(2);
+        if (Number.isInteger(val)) return val;
+        return val.toFixed(1);
+    }
 
-  box.querySelectorAll('button[data-up]').forEach(b=>{
-    b.onclick = () => {
-      const key = b.getAttribute('data-up');
-      attemptUpgradeTower(t, key);
-    };
-  });
+    Object.entries(t.stats).forEach(([key, val]) => {
+        if (key === 'projectileSpeed') return;
+        statsHtml += `<span>${key.toUpperCase()}: ${formatStat(val, key)}</span>`;
+
+        // Preview next level stats
+        if (!isMaxLevel && levelUpDef.statMultipliers[key]) {
+            const nextVal = val * levelUpDef.statMultipliers[key];
+            statsHtml += ` <span class="arrow">→</span> <span class="increase">${formatStat(nextVal, key)}</span>`;
+        }
+        statsHtml += `<br>`;
+    });
+    statsHtml += '</div>';
+
+    let buttonHtml = '';
+    if (isMaxLevel) {
+        buttonHtml = `<button class="btn" disabled>⭐ MAX LEVEL ⭐</button>`;
+    } else {
+        const cost = getTowerLevelUpCost(t);
+        const costHtml = Object.entries(cost).map(([k,v])=>`${v} ${k}`).join(', ');
+        buttonHtml = `<button id="levelUpBtn" class="btn" style="width:100%">Level Up (${costHtml})</button>`;
+    }
+
+    box.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px">
+            ${statsHtml}
+            ${buttonHtml}
+        </div>`;
+
+    if (!isMaxLevel) {
+        document.getElementById('levelUpBtn').onclick = () => attemptLevelUpTower(t);
+    }
 }
 
-function attemptUpgradeTower(tower, key){
-  const up = tower.def.upgrades?.[key]; if(!up) return;
-  // เช็คทรัพยากร
-  const can = Object.entries(up.cost).every(([k,v])=> state[k] >= v);
-  if(!can) return toast('ทรัพยากรไม่พอ');
+function getTowerLevelUpCost(tower){
+    const def = tower.def.levelUp;
+    const nextLevel = tower.level; // cost for level n+1 is calculated at level n
+    const finalCost = {};
+    for(const [resource, baseCost] of Object.entries(def.cost)){
+        finalCost[resource] = Math.floor(baseCost * Math.pow(def.costMultiplier, nextLevel - 1));
+    }
+    return finalCost;
+}
 
-  // ตัดทรัพยากร
-  Object.entries(up.cost).forEach(([k,v])=> state[k]-=v);
+function attemptLevelUpTower(tower){
+    const def = tower.def;
+    if(tower.level >= def.maxLevel) return toast("Max level reached");
 
-  // ผลอัปเกรด (คูณตาม mul)
-  if(key==='dmg')   tower.stats.dmg   *= up.mul;
-  if(key==='range') tower.stats.range *= up.mul;
-  if(key==='rate')  tower.stats.rate  *= up.mul;
-  if(key==='slow')  tower.stats.slow  *= up.mul;
-  if(key==='splash')tower.stats.splash*= up.mul;
+    const cost = getTowerLevelUpCost(tower);
+    const canAfford = Object.entries(cost).every(([k, v]) => state[k] >= v);
 
-  tower.level = (tower.level||1) + 1;
-  // ปรับสมเหตุผลกับไบโอม: ป้อมในทะเลทรายยิงช้าลง → ให้ rate boost เพิ่มอีกนิดเวลามีอัปเกรด rate
-  if(key==='rate' && state.biome==='DESERT'){ tower.stats.rate *= 1.02; }
+    if(!canAfford) return toast("ทรัพยากรไม่พอ");
 
-  updateHUD(); updateSelectedInfo();
-  toast('อัปเกรดสำเร็จ');
+    Object.entries(cost).forEach(([k, v]) => state[k] -= v);
+
+    tower.level++;
+    for(const [stat, multiplier] of Object.entries(def.levelUp.statMultipliers)){
+        if(tower.stats[stat] !== undefined){
+            tower.stats[stat] *= multiplier;
+        }
+    }
+    
+    toast(`${tower.def.name} อัปเกรดเป็น Level ${tower.level}!`);
+    updateHUD();
+    updateSelectedInfo();
 }
 
 function updateCitadelUI(){
@@ -719,10 +900,113 @@ function upgradeCitadel(){
   else toast('ทรัพยากรไม่พอ');
 }
 
+// ===== GM Panel Logic =====
+function openGmPanel() {
+    // Populate Themes
+    const themeContainer = document.getElementById('gmThemeSelector');
+    themeContainer.innerHTML = '';
+    Object.entries(CONFIG.BIOME_MODIFIERS).forEach(([key, biome]) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = biome.name;
+        btn.style.backgroundColor = state.biome === key ? 'var(--pri)' : '';
+        btn.onclick = () => {
+            state.biome = key;
+            toast(`เปลี่ยนธีมเป็น ${biome.name}`);
+            openGmPanel(); // Refresh panel to show selection
+        };
+        themeContainer.appendChild(btn);
+    });
+
+    const getSpritePreview = (frameName) => {
+        const div = document.createElement('div');
+        const f = Atlas.frames[frameName];
+        if (!f) return null;
+        div.style.backgroundImage = `url(${Atlas.img.src})`;
+        div.style.backgroundPosition = `-${f.x}px -${f.y}px`;
+        div.style.width = `${f.w}px`;
+        div.style.height = `${f.h}px`;
+        return div;
+    };
+
+    // Populate Enemies
+    const enemyContainer = document.getElementById('gmEnemySelector');
+    enemyContainer.innerHTML = '';
+    const enemySprites = [...new Set(Object.keys(Atlas.frames).filter(k => k.startsWith('enemy_')).map(k => k.replace(/_\d+$/, '')))];
+    Object.entries(CONFIG.ENEMY_TYPES).forEach(([enemyKey, enemyDef]) => {
+        const card = document.createElement('div');
+        card.className = 'gm-entity-card';
+        const currentSpriteDisplay = getSpritePreview(`${state.spriteMap[enemyKey]}_0`);
+        if(currentSpriteDisplay) currentSpriteDisplay.className = 'gm-current-sprite';
+        
+        card.innerHTML = `<h4>${currentSpriteDisplay ? currentSpriteDisplay.outerHTML : ''} ${enemyKey}</h4>`;
+        
+        const list = document.createElement('div');
+        list.className = 'gm-sprite-list';
+        enemySprites.forEach(spriteStem => {
+            const preview = getSpritePreview(`${spriteStem}_0`);
+            if (!preview) return;
+            preview.className = 'gm-sprite-preview';
+            if (state.spriteMap[enemyKey] === spriteStem) {
+                preview.classList.add('selected');
+            }
+            preview.onclick = () => {
+                state.spriteMap[enemyKey] = spriteStem;
+                openGmPanel(); // Refresh
+            };
+            list.appendChild(preview);
+        });
+        card.appendChild(list);
+        enemyContainer.appendChild(card);
+    });
+
+    // Populate Towers
+    const towerContainer = document.getElementById('gmTowerSelector');
+    towerContainer.innerHTML = '';
+    const towerSprites = [...new Set(Object.keys(Atlas.frames).filter(k => k.startsWith('tower_')).map(k => k.replace(/_base$|_turret$/, '')))];
+    Object.entries(CONFIG.TOWER_TYPES).forEach(([towerKey, towerDef]) => {
+        const card = document.createElement('div');
+        card.className = 'gm-entity-card';
+
+        const currentSpriteDisplay = getSpritePreview(`${state.spriteMap[towerKey]}_base`);
+        if(currentSpriteDisplay) currentSpriteDisplay.className = 'gm-current-sprite';
+
+        card.innerHTML = `<h4>${currentSpriteDisplay ? currentSpriteDisplay.outerHTML : ''} ${towerDef.name}</h4>`;
+        
+        const list = document.createElement('div');
+        list.className = 'gm-sprite-list';
+        towerSprites.forEach(spriteStem => {
+            const preview = getSpritePreview(`${spriteStem}_base`);
+            if (!preview) return;
+            preview.className = 'gm-sprite-preview';
+            if (state.spriteMap[towerKey] === spriteStem) {
+                preview.classList.add('selected');
+            }
+            preview.onclick = () => {
+                state.spriteMap[towerKey] = spriteStem;
+                openGmPanel(); // Refresh
+            };
+            list.appendChild(preview);
+        });
+        card.appendChild(list);
+        towerContainer.appendChild(card);
+    });
+
+
+    document.getElementById('gmModal').classList.add('visible');
+}
+
 // ===== Events =====
 document.getElementById('btnCitadel').onclick=()=>document.getElementById('citadelModal').classList.add('visible');
 document.getElementById('closeCitadelModal').onclick=()=>document.getElementById('citadelModal').classList.remove('visible');
-document.getElementById('btnSpeed').onclick=()=>{ state.speed=(state.speed===1?2:1); document.getElementById('btnSpeed').textContent=`⏩ Speed x${state.speed}`; };
+document.getElementById('btnGM').onclick = openGmPanel;
+document.getElementById('closeGmModal').onclick = ()=>document.getElementById('gmModal').classList.remove('visible');
+document.getElementById('btnSpeed').onclick=()=>{ 
+    const speeds = [1, 2, 3, 4];
+    let currentIndex = speeds.indexOf(state.speed);
+    state.speed = speeds[(currentIndex + 1) % speeds.length];
+    document.getElementById('btnSpeed').textContent=`⏩ Speed x${state.speed}`; 
+};
 document.getElementById('btnStart').onclick=startWave;
 
 function setupWorldSelection(){
@@ -735,10 +1019,19 @@ function setupWorldSelection(){
     const c=Math.floor(x/TW), r=Math.floor(y/TH); const biomes=Object.keys(CONFIG.BIOME_MODIFIERS); const idx=(r*8+c)%biomes.length; pendingBiome=biomes[idx];
     const preview=document.getElementById('zonePreview'); const bd=CONFIG.BIOME_MODIFIERS[pendingBiome]; preview.innerHTML=`<b>${bd.name}:</b> ${bd.desc}`; document.getElementById('btnConfirm').disabled=false;
   };
-  document.getElementById('btnConfirm').onclick=async()=>{ if(pendingBiome){ state.biome=pendingBiome; state.mode='play';
-      document.getElementById('selectionContent').style.display='none'; document.getElementById('loadingOverlay').style.display='block';
-      await loadAtlas('assets/atlas.png','assets/atlas.json'); // โหลด atlas ครั้งเดียวพอ
-      document.getElementById('worldOverlay').classList.remove('visible'); toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`); initGame(); } };
+  document.getElementById('btnConfirm').onclick=async()=>{ 
+    if(pendingBiome){ 
+      Sound.init(); // Initialize Audio on first user gesture
+      state.biome=pendingBiome; 
+      state.mode='play';
+      document.getElementById('selectionContent').style.display='none'; 
+      document.getElementById('loadingOverlay').style.display='block';
+      await loadAtlas();
+      document.getElementById('worldOverlay').classList.remove('visible'); 
+      toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`); 
+      initGame(); 
+    } 
+  };
   drawWorldMap();
 }
 
@@ -751,7 +1044,7 @@ function TS(){ return { w:game.width/CONFIG.GRID.COLS, h:game.height/CONFIG.GRID
 function tileCenter(c,r){ const t=TS(); return { x:(c+0.5)*t.w, y:(r+0.5)*t.h }; }
 function worldToTile(px,py){ const t=TS(); return { c:Math.floor(px/t.w), r:Math.floor(py/t.h) }; }
 function dist(x1,y1,x2,y2){ return Math.hypot(x1-x2, y1-y2); }
-function toast(msg){ const el=document.createElement('div'); el.style.position='fixed'; el.style.bottom='20px'; el.style.left='50%'; el.style.transform='translateX(-50%)'; el.style.background='var(--pri)'; el.style.color='#0b1220'; el.style.padding='10px 20px'; el.style.borderRadius='8px'; el.style.zIndex='200'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2500); }
+function toast(msg){ const el=document.createElement('div'); el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--pri);color:#0b1220;padding:10px 20px;border-radius:8px;z-index:200;font-weight:bold;'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2500); }
 function nearestPathDistPx(x,y){
   let m = Infinity;
   for(const p of state.path){ const d = dist(x,y,p.x,p.y); if(d<m) m=d; }
@@ -759,7 +1052,6 @@ function nearestPathDistPx(x,y){
 }
 function isTooCloseToPath(c,r){
   const {x,y} = tileCenter(c,r);
-  // ห้ามใกล้กึ่งกลางทาง < 0.65 tile กำลังดี (กันไม่ให้บังภาพ/ชนกัน)
   return nearestPathDistPx(x,y) < TS().w * 0.65;
 }
 function drawBuildOverlay(ctx){
@@ -773,7 +1065,7 @@ function drawBuildOverlay(ctx){
       const tooClose = isTooCloseToPath(c,r);
 
       let alpha = .14;
-      let col   = '#22c55e'; // เขียว = วางได้
+      let col   = '#22c55e'; // Green = placeable
       if (onPath || occupied || tooClose){ col = '#ef4444'; alpha = .18; }
 
       ctx.save();
@@ -785,9 +1077,8 @@ function drawBuildOverlay(ctx){
     }
   }
 
-  // ไฮไลต์ช่องที่เมาส์ชี้
   const t = worldToTile(state.mouse.x,state.mouse.y);
-  if(t.c>=0 && t.r>=0){
+  if(t.c>=0 && t.r>=0 && t.c<CONFIG.GRID.COLS && t.r<CONFIG.GRID.ROWS){
     const {x,y} = tileCenter(t.c,t.r);
     ctx.save(); ctx.globalAlpha=.35; ctx.strokeStyle='#fff'; ctx.lineWidth=2;
     const w = ts.w - 2, h = ts.h - 2;
@@ -808,5 +1099,4 @@ setupWorldSelection();
 </script>
 </body>
 </html>
-
 
