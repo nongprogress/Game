@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>Idle TD — GM Edition v2.4</title>
+<title>Idle TD — GM Edition v2.5</title>
 <style>
   :root{
     --bg:#0b1220; --card:#0f172a; --line:#243041; --ink:#e2e8f0; --mut:#a8b3c7;
     --pri:#22d3ee; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --yel:#facc15;
     --safe:#2e7d32; --ore:#8d6e63; --bal:#2962ff; --lava:#b91c1c; --ice:#38bdf8; --sand:#ca8a04;
+    --water: #0c4a6e;
     --bg-grassland:#166534; --path-grassland:#a16207;
     --bg-desert:#b45309; --path-desert:#fde68a;
     --bg-frostlands:#075985; --path-frostlands:#e0f2fe;
@@ -178,14 +179,8 @@
   <div id="loadingOverlay" style="display:none;"><p>กำลังโหลดทรัพยากร...</p></div>
   <div id="selectionContent" class="modal-content" style="max-width:960px">
     <h3>เลือกพื้นที่ตั้งฐานบนแผนที่โลก</h3>
-    <div class="legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-      <span><i style="display:inline-block;width:10px;height:10px;background:var(--safe);border-radius:2px"></i> ทุ่งหญ้า</span>
-      <span><i style="display:inline-block;width:10px;height:10px;background:var(--sand);border-radius:2px"></i> ทะเลทราย</span>
-      <span><i style="display:inline-block;width:10px;height:10px;background:var(--ice);border-radius:2px"></i> แดนน้ำแข็ง</span>
-      <span><i style="display:inline-block;width:10px;height:10px;background:var(--lava);border-radius:2px"></i> เขตภูเขาไฟ</span>
-    </div>
-    <canvas id="world" width="960" height="540"></canvas>
-    <div id="zonePreview" style="margin-top:10px;min-height:40px;">เลือกพื้นที่...</div>
+    <canvas id="world" width="960" height="540" style="background-color: var(--water);"></canvas>
+    <div id="zonePreview" style="margin-top:10px;min-height:40px;">เลือกพื้นที่บนบก...</div>
     <button class="btn" id="btnConfirm" disabled style="width:100%;margin-top:10px">✅ ยืนยันตั้งฐานที่นี่</button>
   </div>
 </div>
@@ -194,7 +189,7 @@
 (async function(){
 
 // ===== Atlas Loader (Global) =====
-const ATLAS_IMAGE_BASE64 = 'data:image/png;base64,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';
+const ATLAS_IMAGE_BASE64 = 'data:image/png;base64,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';
 
 const ATLAS_JSON_DATA = {
     "frames": {
@@ -226,6 +221,9 @@ const ATLAS_JSON_DATA = {
         "vfx_explosion_3": { "x": 48, "y": 64, "w": 16, "h": 16 }
     }
 };
+// ===== Asset Source (External, optional) =====
+let ATLAS_IMAGE_URL = 'https://nongprogress.github.io/Game/assets/atlas.png';
+let ATLAS_JSON_URL  = 'https://nongprogress.github.io/Game/assets/atlas.json'; // ถ้าไม่มี ให้เป็น ''
 
 const Atlas = { img:new Image(), frames:{}, ready:false };
 
@@ -244,12 +242,29 @@ function normalizeFrames(map){
 
 async function loadAtlas(){
   try{
-    const map = ATLAS_JSON_DATA;
+    const useRemote = !!ATLAS_IMAGE_URL;
+
+    let map = ATLAS_JSON_DATA;
+    if (useRemote && ATLAS_JSON_URL) {
+      const res = await fetch(ATLAS_JSON_URL, { mode:'cors' });
+      map = await res.json();
+    }
     Atlas.frames = normalizeFrames(map);
-    await new Promise(res=>{ Atlas.img.onload=res; Atlas.img.onerror=res; Atlas.img.src = ATLAS_IMAGE_BASE64; });
-    Atlas.ready = true;
-    console.log('[Atlas] ready (GM Edition)', Object.keys(Atlas.frames).length);
-  }catch(e){ console.warn('[Atlas] load failed', e); Atlas.ready=false; }
+
+    Atlas.img = new Image();
+    Atlas.img.crossOrigin = 'anonymous';
+    await new Promise(res=>{
+      Atlas.img.onload = res;
+      Atlas.img.onerror = res;
+      Atlas.img.src = useRemote ? ATLAS_IMAGE_URL : ATLAS_IMAGE_BASE64;
+    });
+
+    Atlas.ready = !!Atlas.img.naturalHeight;
+    console.log('[Atlas] ready', { remote: useRemote, frames: Object.keys(Atlas.frames).length });
+  }catch(e){
+    console.warn('[Atlas] load failed', e);
+    Atlas.ready = false;
+  }
 }
 
 function drawFrame(ctx, name, x, y, w, h, rot=0){
@@ -337,10 +352,18 @@ const Sound = {
 
 // === Patterns & Ground ===
 function drawGround(ctx){
+  const img = BgImg[state.biome];
+  if (img && img.complete && img.naturalHeight>0){
+    const t  = performance.now()/1000;
+    const ox = Math.floor((Math.sin(t*0.10)+1)*20);
+    const oy = Math.floor((Math.cos(t*0.07)+1)*20);
+    ctx.drawImage(img, -ox, -oy, ctx.canvas.width+ox*2, ctx.canvas.height+oy*2);
+  } else {
     const root = getComputedStyle(document.documentElement);
     const biomeBg = root.getPropertyValue(`--bg-${state.biome.toLowerCase()}`).trim();
     ctx.fillStyle = biomeBg || '#134e4a';
     ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height);
+  }
 }
 
 function drawPath(ctx){
@@ -366,6 +389,23 @@ function drawPath(ctx){
 }
 
 // ===== GAME CONFIG =====
+// ===== Biome Backgrounds (external) =====
+const BIOME_BG = {
+  GRASSLAND: 'https://nongprogress.github.io/Game/assets/bg_grass.png',
+  DESERT:    'https://nongprogress.github.io/Game/assets/bg_desert.png',
+  FROSTLANDS:'https://nongprogress.github.io/Game/assets/bg_frost.png',
+  VOLCANIC:  'https://nongprogress.github.io/Game/assets/bg_volcanic.png',
+};
+const BgImg = {};
+function preloadBiomeBG(){
+  for(const [k,url] of Object.entries(BIOME_BG)){
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    BgImg[k] = img;
+  }
+}
+
 const CONFIG = {
   GRID:{ COLS:24, ROWS:14 },
   CITADEL_TIERS:{
@@ -902,9 +942,26 @@ function upgradeCitadel(){
 
 // ===== GM Panel Logic =====
 function openGmPanel() {
-    // Populate Themes
+    // ใต้ส่วนสร้าง Theme Selector ใน openGmPanel()
+    const btnAtlas = document.createElement('button');
+    btnAtlas.className = 'btn';
+    btnAtlas.textContent = '📦 Load External Atlas';
+    btnAtlas.onclick = async () => {
+      const imgUrl  = prompt('Atlas PNG URL (CORS-enabled):', ATLAS_IMAGE_URL || '');
+      const jsonUrl = prompt('Atlas JSON URL (optional):', ATLAS_JSON_URL || '');
+      if (imgUrl) {
+        ATLAS_IMAGE_URL = imgUrl;
+        ATLAS_JSON_URL  = jsonUrl || '';
+        await loadAtlas();
+        updateBuildMenu();
+        openGmPanel();
+        toast('Atlas reloaded');
+      }
+    };
+    // แทรกปุ่มไว้ใต้แถวธีม
     const themeContainer = document.getElementById('gmThemeSelector');
-    themeContainer.innerHTML = '';
+    themeContainer.parentNode.insertBefore(btnAtlas, themeContainer.nextSibling);
+
     Object.entries(CONFIG.BIOME_MODIFIERS).forEach(([key, biome]) => {
         const btn = document.createElement('button');
         btn.className = 'btn';
@@ -1010,29 +1067,136 @@ document.getElementById('btnSpeed').onclick=()=>{
 document.getElementById('btnStart').onclick=startWave;
 
 function setupWorldSelection(){
-  const worldCanvas=document.getElementById('world'); const wCtx=worldCanvas.getContext('2d'); let pendingBiome=null;
-  function drawWorldMap(){ const TW=worldCanvas.width/8, TH=worldCanvas.height/5; wCtx.clearRect(0,0,worldCanvas.width,worldCanvas.height);
-    let i=0; const biomes=Object.keys(CONFIG.BIOME_MODIFIERS); const root=getComputedStyle(document.documentElement);
-    for(let r=0;r<5;r++){ for(let c=0;c<8;c++){ const bk=biomes[i%biomes.length]; const bd=CONFIG.BIOME_MODIFIERS[bk]; const varName=bd.color.replace('var(','').replace(')',''); wCtx.fillStyle=root.getPropertyValue(varName).trim(); wCtx.fillRect(c*TW, r*TH, TW-2, TH-2); i++; } }
-  }
-  worldCanvas.onclick=e=>{ const rect=worldCanvas.getBoundingClientRect(); const x=e.clientX-rect.left, y=e.clientY-rect.top; const TW=worldCanvas.width/8, TH=worldCanvas.height/5;
-    const c=Math.floor(x/TW), r=Math.floor(y/TH); const biomes=Object.keys(CONFIG.BIOME_MODIFIERS); const idx=(r*8+c)%biomes.length; pendingBiome=biomes[idx];
-    const preview=document.getElementById('zonePreview'); const bd=CONFIG.BIOME_MODIFIERS[pendingBiome]; preview.innerHTML=`<b>${bd.name}:</b> ${bd.desc}`; document.getElementById('btnConfirm').disabled=false;
-  };
-  document.getElementById('btnConfirm').onclick=async()=>{ 
-    if(pendingBiome){ 
-      Sound.init(); // Initialize Audio on first user gesture
-      state.biome=pendingBiome; 
-      state.mode='play';
-      document.getElementById('selectionContent').style.display='none'; 
-      document.getElementById('loadingOverlay').style.display='block';
-      await loadAtlas();
-      document.getElementById('worldOverlay').classList.remove('visible'); 
-      toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`); 
-      initGame(); 
-    } 
-  };
-  drawWorldMap();
+    const worldCanvas = document.getElementById('world');
+    const wCtx = worldCanvas.getContext('2d');
+    const WORLD_COLS = 80;
+    const WORLD_ROWS = 50;
+    let worldGrid = [];
+    let pendingBiome = null;
+    let selectedWorldTile = null;
+
+    function generateWorldData() {
+        // 1. Initialize with water
+        worldGrid = Array(WORLD_ROWS).fill(0).map(() => Array(WORLD_COLS).fill({ type: 'WATER' }));
+
+        // 2. Create landmasses with drunkard's walk
+        const numContinents = 5;
+        const walkLength = 250;
+        for (let i = 0; i < numContinents; i++) {
+            let x = Math.floor(Math.random() * WORLD_COLS);
+            let y = Math.floor(Math.random() * WORLD_ROWS);
+
+            for (let j = 0; j < walkLength; j++) {
+                if (x >= 0 && x < WORLD_COLS && y >= 0 && y < WORLD_ROWS) {
+                    worldGrid[y][x] = { type: 'LAND_TEMP' };
+                }
+                const dir = Math.floor(Math.random() * 4);
+                if (dir === 0) x++; else if (dir === 1) x--; else if (dir === 2) y++; else y--;
+            }
+        }
+        
+        // 3. Assign biomes based on latitude and some randomness
+        const root = getComputedStyle(document.documentElement);
+        const biomeKeys = Object.keys(CONFIG.BIOME_MODIFIERS);
+        for (let r = 0; r < WORLD_ROWS; r++) {
+            for (let c = 0; c < WORLD_COLS; c++) {
+                if (worldGrid[r][c].type === 'LAND_TEMP') {
+                    const lat = r / WORLD_ROWS;
+                    let biomeKey;
+                    if (lat < 0.15 || lat > 0.85) { // Poles
+                        biomeKey = 'FROSTLANDS';
+                    } else if (lat > 0.4 && lat < 0.6) { // Equator
+                        biomeKey = Math.random() < 0.6 ? 'DESERT' : 'VOLCANIC';
+                    } else { // Temperate
+                        biomeKey = 'GRASSLAND';
+                    }
+                    const biomeData = CONFIG.BIOME_MODIFIERS[biomeKey];
+                    const colorVar = biomeData.color.replace('var(', '').replace(')', '');
+                    worldGrid[r][c] = {
+                        type: biomeKey,
+                        key: biomeKey,
+                        color: root.getPropertyValue(colorVar).trim()
+                    };
+                } else {
+                    worldGrid[r][c] = { type: 'WATER', color: root.getPropertyValue('--water').trim() };
+                }
+            }
+        }
+    }
+
+    function drawWorldMap() {
+        const TW = worldCanvas.width / WORLD_COLS;
+        const TH = worldCanvas.height / WORLD_ROWS;
+        wCtx.clearRect(0, 0, worldCanvas.width, worldCanvas.height);
+
+        for (let r = 0; r < WORLD_ROWS; r++) {
+            for (let c = 0; c < WORLD_COLS; c++) {
+                wCtx.fillStyle = worldGrid[r][c].color;
+                wCtx.fillRect(c * TW, r * TH, TW + 1, TH + 1); // +1 to avoid gaps
+            }
+        }
+        
+        // Draw selected character icon
+        if (selectedWorldTile) {
+            const { c, r } = selectedWorldTile;
+            const x = (c + 0.5) * TW;
+            const y = (r + 0.5) * TH;
+            wCtx.font = `${TW * 1.5}px sans-serif`;
+            wCtx.textAlign = 'center';
+            wCtx.textBaseline = 'middle';
+            wCtx.fillStyle = '#fff';
+            wCtx.fillText('👤', x, y);
+            wCtx.strokeStyle = '#000';
+            wCtx.lineWidth = 1;
+            wCtx.strokeText('👤', x, y);
+        }
+    }
+
+    worldCanvas.onclick = e => {
+        const rect = worldCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left, y = e.clientY - rect.top;
+        const TW = worldCanvas.width / WORLD_COLS;
+        const TH = worldCanvas.height / WORLD_ROWS;
+        const c = Math.floor(x / TW);
+        const r = Math.floor(y / TH);
+
+        if (c < 0 || c >= WORLD_COLS || r < 0 || r >= WORLD_ROWS) return;
+
+        const tile = worldGrid[r][c];
+        const preview = document.getElementById('zonePreview');
+        const confirmBtn = document.getElementById('btnConfirm');
+
+        if (tile.type !== 'WATER') {
+            pendingBiome = tile.key;
+            selectedWorldTile = { c, r };
+            const biomeData = CONFIG.BIOME_MODIFIERS[pendingBiome];
+            preview.innerHTML = `<b>${biomeData.name}:</b> ${biomeData.desc}`;
+            confirmBtn.disabled = false;
+        } else {
+            pendingBiome = null;
+            selectedWorldTile = null;
+            preview.textContent = 'เลือกพื้นที่บนบก...';
+            confirmBtn.disabled = true;
+        }
+        drawWorldMap(); // Redraw to show character
+    };
+    
+    document.getElementById('btnConfirm').onclick = async () => {
+        if (pendingBiome) {
+            Sound.init(); // Initialize Audio on first user gesture
+            state.biome = pendingBiome;
+            state.mode = 'play';
+            document.getElementById('selectionContent').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'block';
+            await loadAtlas();preloadBiomeBG();
+            document.getElementById('worldOverlay').classList.remove('visible');
+            toast(`ตั้งฐานใน ${CONFIG.BIOME_MODIFIERS[pendingBiome].name}`);
+            initGame();
+        }
+    };
+    
+    generateWorldData();
+    drawWorldMap();
 }
 
 // ===== Utilities =====
